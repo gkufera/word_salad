@@ -1,99 +1,127 @@
 import { StatusBar } from "expo-status-bar";
 import React, { useRef } from "react";
-import { StyleSheet, Text, View, Button } from "react-native";
+import { StyleSheet, Text, TextInput, View, Button } from "react-native";
 import { WebView } from "react-native-webview";
-import * as Speech from "expo-speech";
 import Constants from "expo-constants";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function App() {
-  const potato1 = `potato potatopotato potato potato potatopotatopotato potatopotatopotatopotato potatopotatopotato potatopotato potato potato potatopotato potatopotato potato potato potatopotato potato potato potato potatopotatopotatopotato potato potato potato potato potato potatopotatopotatopotato potato potato potato potato potatopotato potato potato potatopotato potato potatopotatopotatopotato potato potatopotato potatopotatopotato potatopotatopotatopotato potatopotatopotato potato potato potato potatopotato potatopotato potatopotato potatopotato potato potato potato potatopotato potatopotato potatopotato potatopotato potatopotato potato potato potato potatopotato potato potato potato potatopotatopotato potato potato potatopotatopotato potato potato potatopotato potato potatopotatopotatopotato potatopotatopotato potatopotato potatopotato`;
+  // The only way we can make multiple simultaneous text to speeches on iOS is via multiple webviews.
+  // ...and Safari needs input in order to use text to speech.
+  // So this is an annoyingly complicated project.
 
-  const potato2 = `potatopotato potatopotatopotato potatopotatopotato potatopotatopotatopotatopotato potatopotato potato potato potato potato potato potato potatopotatopotato potatopotatopotatopotato potato potato potatopotatopotato potato potatopotato potatopotato potato potatopotato potato potato potatopotato potatopotato potato potato potatopotatopotato potatopotatopotatopotato potato potato potato potatopotatopotato potato potatopotatopotatopotatopotatopotato potatopotato potato potato potato potato potato potato potato potato potato potato potato potato potatopotatopotato potato potato potatopotato potatopotato potato potato potato potatopotato potato potato potatopotatopotatopotato potatopotato potatopotatopotato potatopotatopotato potato potato potato potatopotatopotatopotatopotato potato potato potato potatopotato potato potatopotato`;
-
-  const potato3 = `potato potato potato potato potatopotatopotatopotatopotato potato potato potato potatopotatopotatopotatopotato potato potatopotatopotato potato potato potatopotatopotato potatopotatopotato potatopotatopotato potatopotato potato potatopotatopotato potatopotatopotatopotatopotatopotatopotato potatopotatopotatopotatopotatopotatopotatopotatopotatopotato potato potato potato potato potato potatopotatopotatopotato potato potatopotato potato potato potato potato potatopotatopotato potato potato potatopotatopotatopotatopotatopotato potato potato potato potatopotato potato potatopotato potato potato potatopotato potatopotato potatopotato potatopotatopotato potato potato potatopotato potato potatopotato potatopotato potatopotato potato potatopotato potato potato potato potato potato potatopotato potatopotato potato potato potatopotatopotato potato potato`;
-
-  const theCode = `
-  document.getElementById('enable_voice_output').addEventListener('click', primeSpeak);
-  var speechPrimed = false;
-  function primeSpeak(){
-    //if(speechPrimed === false){
-      var u = new SpeechSynthesisUtterance("${potato1}");
-      u.voice = speechSynthesis.getVoices()[1]
-      speechSynthesis.speak(u);
-      speechPrimed = true;
-      document.getElementById("voices").innerHTML = speechSynthesis.getVoices().map((voice, i) => {
-        return voice.name + ' ' + i;
-      });
-    //}
+  const [currentTextValue, onChangeText] = React.useState("");
+  const [currentWebView, setCurrentWebView] = React.useState(0);
+  const webRefs = [];
+  const NUM_WEB_REFS = 10;
+  for (var i = 0; i < NUM_WEB_REFS; i++) {
+    webRefs[i] = useRef(null);
   }
-  setTimeout(function(){ document.getElementById("enable_voice_output").click(); }, Math.random() * 2000 + 1000);
+  const placeholder = "type";
+  const theCode = `
+  document.onclick = function() {
+    window.ReactNativeWebView.postMessage("")
+  }
+  document.body.style.backgroundColor = 'black'
   true; // note: this is required, or you'll sometimes get silent failures
-`;
+`; // TODO: pass back the list of voices
 
-  // apparently Safari needs input in order to use text to speech.
   // search for alex and find him if you can.... maybe prompt users to download him if you can't?
 
+  const plusDimension = 50;
   const styles = StyleSheet.create({
     container: {
-      //flex: 1,
-      //justifyContent: "center",
-      paddingTop: Constants.statusBarHeight,
-      backgroundColor: "#ecf0f1",
-      padding: 8,
+      flex: 1,
+      justifyContent: "space-between",
+      backgroundColor: "#FFFFFF",
+    },
+    topBarContainer: {
+      flex: 1,
+      justifyContent: "space-between",
+      flexDirection: "row",
+      height: plusDimension,
+    },
+    textInput: {
+      flex: 1,
+      minWidth: plusDimension * 3,
+      height: plusDimension,
+      borderColor: "#000000",
+      borderWidth: 1,
+      paddingLeft: 20,
+      paddingRight: 20,
+    },
+    barSpacer: {
+      width: 20,
+    },
+    plusContainer: {
+      height: plusDimension,
+      width: plusDimension,
+    },
+    visiblePlusWebView: {
+      height: plusDimension,
+      width: plusDimension,
+      //position: "absolute",
+      top: 0,
+      bottom: 0,
+    },
+    invisiblePlusWebView: {
+      height: 0,
+      width: 0,
       position: "absolute",
       top: 0,
       bottom: 0,
-      left: 0,
-      right: 0,
     },
   });
 
+  const startSalad = (i) => {
+    // get ref from event.nativeEvent.data
+    // inject this JS
+    webRefs[i].current.injectJavaScript(`
+    var u = new SpeechSynthesisUtterance("${currentTextValue}");
+    u.voice = speechSynthesis.getVoices()[1]
+    speechSynthesis.speak(u);
+    `);
+    // store ref and currentTextValue in dictionary of ongoing voices (polling if stopped)
+  };
+
   return (
-    <View style={styles.container}>
-      <WebView
-        style={{
-          top: 100,
-          height: 500,
-          left: 0,
-          right: 0,
-          position: "absolute",
-        }}
-        source={{
-          html: `<br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><center><button id="enable_voice_output" style="font-size: 32px;">Potato</button><p id="voices"></p>`,
-        }}
-        injectedJavaScript={theCode}
-        onMessage={(event) => {}}
-        ignoreSilentHardwareSwitch={true}
-        scrollEnabled={false}
-        scalesPageToFit={Platform.OS === "android"}
-        bounces={false}
-      />
-      <WebView
-        style={{
-          top: 0,
-          height: 500,
-          left: 0,
-          right: 0,
-          position: "absolute",
-        }}
-        source={{
-          html: `<br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><center><button id="enable_voice_output" style="font-size: 32px;">Potato</button><p id="voices"></p>`,
-        }}
-        injectedJavaScript={theCode}
-        onMessage={(event) => {}}
-        ignoreSilentHardwareSwitch={true}
-        scrollEnabled={false}
-        scalesPageToFit={Platform.OS === "android"}
-        bounces={false}
-      />
-      <Button
-        style={{ height: 600, top: 600 }}
-        title="Potato"
-        onPress={() => {
-          Speech.speak(potato2);
-        }}
-      />
+    <SafeAreaView style={styles.container}>
+      <View style={styles.topBarContainer}>
+        <View style={styles.barSpacer} />
+        <TextInput
+          style={styles.textInput}
+          onChangeText={(text) => onChangeText(text)}
+          value={currentTextValue}
+          autoCorrect={false}
+          autoFocus={true}
+          autoCapitalize={"none"}
+          placeholder={placeholder}
+          returnKeyType={"go"}
+        />
+        <View style={styles.barSpacer} />
+        <View style={styles.plusContainer}>
+          {webRefs.map((webRef, i) => {
+            return (
+              <WebView
+                ref={webRefs[i]}
+                key={i}
+                style={styles.visiblePlusWebView}
+                source={{
+                  html: `<body />`,
+                }}
+                injectedJavaScript={theCode}
+                onMessage={(event) => startSalad(i)}
+                ignoreSilentHardwareSwitch={true}
+                scrollEnabled={false}
+                scalesPageToFit={Platform.OS === "android"}
+                bounces={false}
+              />
+            );
+          })}
+        </View>
+        <View style={styles.barSpacer} />
+      </View>
       <View style={{ height: 300 }} />
-    </View>
+    </SafeAreaView>
   );
 }
