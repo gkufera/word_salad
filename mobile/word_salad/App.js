@@ -11,7 +11,7 @@ export default function App() {
   // So this is an annoyingly complicated project.
 
   const [currentTextValue, onChangeText] = React.useState("");
-  const [currentWebView, setCurrentWebView] = React.useState(0);
+  const [currentWebRef, setCurrentWebRef] = React.useState(0);
   const webRefs = [];
   const NUM_WEB_REFS = 10;
   for (var i = 0; i < NUM_WEB_REFS; i++) {
@@ -54,13 +54,13 @@ export default function App() {
       width: 20,
     },
     plusContainer: {
-      height: plusDimension,
+      //height: plusDimension,
       width: plusDimension,
     },
     visiblePlusWebView: {
       height: plusDimension,
       width: plusDimension,
-      //position: "absolute",
+      position: "absolute",
       top: 0,
       bottom: 0,
     },
@@ -68,7 +68,7 @@ export default function App() {
       height: 0,
       width: 0,
       position: "absolute",
-      top: 0,
+      top: plusDimension,
       bottom: 0,
     },
   });
@@ -96,7 +96,7 @@ export default function App() {
           autoFocus={true}
           autoCapitalize={"none"}
           placeholder={placeholder}
-          returnKeyType={"go"}
+          returnKeyType={"none"}
         />
         <View style={styles.barSpacer} />
         <View style={styles.plusContainer}>
@@ -105,7 +105,11 @@ export default function App() {
               <WebView
                 ref={webRefs[i]}
                 key={i}
-                style={styles.visiblePlusWebView}
+                style={
+                  currentWebRef == i
+                    ? styles.visiblePlusWebView
+                    : styles.invisiblePlusWebView
+                }
                 source={{
                   html: `<body />`,
                 }}
