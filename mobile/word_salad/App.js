@@ -68,7 +68,8 @@ export default function App() {
     salads: {
       flex: 1,
       minHeight: 500,
-      justifyContent: "center",
+      justifyContent: "flex-start",
+      paddingTop: 30,
     },
     button: {
       height: 20,
