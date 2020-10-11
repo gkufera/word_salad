@@ -7,6 +7,7 @@ import {
   View,
   Button,
   ScrollView,
+  TouchableOpacity,
 } from "react-native";
 import { WebView } from "react-native-webview";
 import Constants from "expo-constants";
@@ -266,16 +267,18 @@ const GET_FLAG = (countryCode) => {
   if (countryCode == "ZM") return "🇿🇲";
   return "🏳";
 };
-const NUM_WEB_REFS = 20;
+const NUM_WEB_REFS = 5;
 const NUM_WORD_SALAD_WORDS = 500;
 const CHANCE_OF_SPACE = 50;
 const MESSAGE_TYPES = {
   START_SALAD: "STARTSALAD",
   END_SALAD: "ENDSALAD",
   VOICES: "VOICES",
+  WEBVIEW_TOUCHED: "WEBVIEWTOUCHED",
 };
 const PLACEHOLDER = "type";
-const PLUS_DIMENSION = 50;
+const BAR_DIMENSION = 50;
+const WEBVIEW_DIMENSION = 50;
 const PRESETS = [
   [ 
     {
@@ -386,33 +389,38 @@ export default function App() {
       flex: 1,
       justifyContent: "space-between",
       flexDirection: "row",
-      height: PLUS_DIMENSION,
+      height: BAR_DIMENSION,
       paddingBottom: 75,
     },
     textInput: {
       flex: 1,
-      minWidth: PLUS_DIMENSION * 3,
-      height: PLUS_DIMENSION,
+      minWidth: BAR_DIMENSION * 3,
+      height: BAR_DIMENSION,
       borderColor: "#000000",
       borderWidth: 1,
       paddingLeft: 20,
       paddingRight: 20,
     },
+    plus: {
+      height: BAR_DIMENSION,
+      width: BAR_DIMENSION,
+      backgroundColor: "#000000",
+    },
     barSpacer: {
       width: 20,
     },
-    plusContainer: {
-      height: PLUS_DIMENSION,
-      width: PLUS_DIMENSION,
+    webViewRowContainer: {
+      flex: 1,
+      justifyContent: "space-around",
+      flexDirection: "row",
+      width: '100%',
+      height: WEBVIEW_DIMENSION * 2,
+      alignItems: 'center',
     },
-    visiblePlusWebView: {
-      height: PLUS_DIMENSION,
-      width: PLUS_DIMENSION,
-      position: "absolute",
-      top: 0,
-      bottom: 0,
+    webView: {
+      height: WEBVIEW_DIMENSION,
+      width: WEBVIEW_DIMENSION,
     },
-    invisiblePlusWebView: {}, // TODO these aren't invisible
     picker: {
       height: 200,
       left: 0,
@@ -437,6 +445,10 @@ export default function App() {
   const [activeSalads, setActiveSalads] = React.useState(
     Array(NUM_WEB_REFS).fill("")
   );
+  const [activatedWebRefs, setActivatedWebRefs] = React.useState(false);
+  const [touchedWebViews, setTouchedWebViews] = React.useState(
+    Array(NUM_WEB_REFS).fill(false)
+  );
 
   const webRefs = [];
   for (var i = 0; i < NUM_WEB_REFS; i++) {
@@ -447,9 +459,15 @@ export default function App() {
   // JS injected to each webview. On click, we make a salad.
   const initialInjectedJavaScript = (i) => `
     document.onclick = function() {
+      /*
       window.ReactNativeWebView.postMessage(JSON.stringify({ message: "${
         MESSAGE_TYPES.START_SALAD
       }" }))
+      */
+     document.body.style.backgroundColor = 'white'
+     window.ReactNativeWebView.postMessage(JSON.stringify({ message: "${
+       MESSAGE_TYPES.WEBVIEW_TOUCHED
+     }" }))
     }
     ${
       // On loading the first webview we collect voices
@@ -563,7 +581,9 @@ export default function App() {
     }
   }
 
-  const startSalad = (i) => startSaladByWordsAndVoiceIndex(currentTextValue, currentVoiceIndex, i)
+  const startSaladByWebView = (i) => startSaladByWordsAndVoiceIndex(currentTextValue, currentVoiceIndex, i)
+
+  const startSalad = () => startSaladByWordsAndVoiceIndex(currentTextValue, currentVoiceIndex, currentWebRef)
 
   const endSalad = (i) => {
     activeSalads[i] = "";
@@ -583,6 +603,20 @@ export default function App() {
     endSalad(i);
   };
 
+  const handleWebViewTouched = (i) => {
+    touchedWebViews[i] = true
+    var done = true
+    for (const element of touchedWebViews) {
+      if (!element) {
+        done = false
+      }
+    }
+    setTouchedWebViews(touchedWebViews)
+    if (done) {
+      setActivatedWebRefs(true)
+    }
+  }
+
   const handleMessage = (i, event) => {
     console.log(event.nativeEvent.data);
     const data = JSON.parse(event.nativeEvent.data);
@@ -596,6 +630,9 @@ export default function App() {
         break;
       case MESSAGE_TYPES.VOICES:
         handleVoices(data.voices);
+        break;
+      case MESSAGE_TYPES.WEBVIEW_TOUCHED:
+        handleWebViewTouched(i);
         break;
     }
   };
@@ -624,7 +661,32 @@ export default function App() {
   }
   */
 
-  return (
+  return !activatedWebRefs ? (
+    <SafeAreaView style={styles.container}>
+      <Text style={styles.title}>WORD SALAD [beta]</Text>
+        <View style={styles.webViewRowContainer}>
+          {webRefs.map((webRef, i) => {
+            return (
+              <WebView
+                ref={webRefs[i]}
+                key={i}
+                style={styles.webView}
+                hidden={currentWebRef != i}
+                source={{
+                  html: `<body />`,
+                }}
+                injectedJavaScript={initialInjectedJavaScript(i)}
+                onMessage={(event) => handleMessage(i, event)}
+                ignoreSilentHardwareSwitch={true}
+                scrollEnabled={false}
+                scalesPageToFit={Platform.OS === "android"}
+                bounces={false}
+              />
+            );
+          })}
+        </View>
+    </SafeAreaView>
+  ) : (
     <SafeAreaView style={styles.container}>
       <Text style={styles.title}>WORD SALAD [beta]</Text>
       <Picker
@@ -657,31 +719,7 @@ export default function App() {
           returnKeyType={"none"}
         />
         <View style={styles.barSpacer} />
-        <View style={styles.plusContainer}>
-          {webRefs.map((webRef, i) => {
-            return (
-              <WebView
-                ref={webRefs[i]}
-                key={i}
-                style={
-                  currentWebRef == i
-                    ? styles.visiblePlusWebView
-                    : styles.invisiblePlusWebView
-                }
-                hidden={currentWebRef != i}
-                source={{
-                  html: `<body />`,
-                }}
-                injectedJavaScript={initialInjectedJavaScript(i)}
-                onMessage={(event) => handleMessage(i, event)}
-                ignoreSilentHardwareSwitch={true}
-                scrollEnabled={false}
-                scalesPageToFit={Platform.OS === "android"}
-                bounces={false}
-              />
-            );
-          })}
-        </View>
+        <TouchableOpacity style={styles.plus} onPress={() => startSalad()} />
         <View style={styles.barSpacer} />
       </View>
       {/*
