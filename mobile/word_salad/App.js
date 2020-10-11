@@ -14,7 +14,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Picker } from "@react-native-community/picker";
 import { Audio } from "expo-av";
 
-const getFlag = (countryCode) => {
+const GET_FLAG = (countryCode) => {
   if (countryCode == "AD") return "🇦🇩";
   if (countryCode == "AE") return "🇦🇪";
   if (countryCode == "AF") return "🇦🇫";
@@ -266,22 +266,109 @@ const getFlag = (countryCode) => {
   if (countryCode == "ZM") return "🇿🇲";
   return "🏳";
 };
+const NUM_WEB_REFS = 20;
+const NUM_WORD_SALAD_WORDS = 500;
+const CHANCE_OF_SPACE = 50;
+const MESSAGE_TYPES = {
+  START_SALAD: "STARTSALAD",
+  END_SALAD: "ENDSALAD",
+  VOICES: "VOICES",
+};
+const PLACEHOLDER = "type";
+const PLUS_DIMENSION = 50;
+const PRESETS = [
+  [ 
+    {
+      lang: 'ar-SA',
+      salad: 'orp',
+      delay: 0,
+    },
+  ],
+  [ 
+    {
+      lang: 'ar-SA',
+      salad: 'banana',
+      delay: 0,
+    },
+  ],
+  [ 
+    {
+      lang: 'fr-CA',
+      salad: 'banana',
+      delay: 0,
+    },
+    {
+      lang: 'fr-FR',
+      salad: 'banana',
+      delay: 200,
+    },
+  ],
+  [ 
+    {
+      lang: 'ar-SA',
+      salad: 'banana',
+      delay: 0,
+    },
+    {
+      lang: 'en-IN',
+      salad: 'banana',
+      delay: 3000,
+    },
+    {
+      lang: 'en-ES',
+      salad: 'banana',
+      delay: 6000,
+    },
+    {
+      lang: 'en-ES',
+      salad: 'banana',
+      delay: 10000,
+    },
+  ],
+  [ 
+    {
+      lang: 'ar-SA',
+      salad: 'orp',
+      delay: 0,
+    },
+    {
+      lang: 'ar-SA',
+      salad: 'tee',
+      delay: 1000,
+    },
+  ],
+  [ 
+    {
+      lang: 'ar-SA',
+      salad: 'tee',
+      delay: 0,
+    },
+  ],
+  [ 
+    {
+      lang: 'cs-CZ',
+      salad: 'potato',
+      delay: 0,
+    },
+    {
+      lang: 'cs-CZ',
+      salad: 'potato',
+      delay: 500,
+    },
+    {
+      lang: 'en-US',
+      salad: 'potato',
+      delay: 2000,
+    },
+  ],
+]
 
 export default function App() {
   // The only way we can make multiple simultaneous text to speeches on iOS is via multiple webviews.
   // ...and Safari needs input in order to use text to speech.
   // So this is an annoyingly complicated project.
 
-  const NUM_WEB_REFS = 20;
-  const NUM_WORD_SALAD_WORDS = 500;
-  const CHANCE_OF_SPACE = 50;
-  const MESSAGE_TYPES = {
-    START_SALAD: "STARTSALAD",
-    END_SALAD: "ENDSALAD",
-    VOICES: "VOICES",
-  };
-  const PLACEHOLDER = "type";
-  const PLUS_DIMENSION = 50;
+  // TODO test if we can just have the user touch a bunch of webviews at the beginning
 
   const styles = StyleSheet.create({
     container: {
@@ -291,10 +378,11 @@ export default function App() {
     },
     title: {
       paddingTop: 10,
+      paddingBottom: 10,
       fontSize: 30,
       textAlign: "center",
     },
-    topBarContainer: {
+    barContainer: {
       flex: 1,
       justifyContent: "space-between",
       flexDirection: "row",
@@ -397,7 +485,7 @@ export default function App() {
         )
         .map((voice) => {
           const countryCode = voice.lang.slice(-2);
-          const flag = getFlag(countryCode);
+          const flag = GET_FLAG(countryCode);
 
           return {
             label: `${voice.lang} ${flag}`,
@@ -437,16 +525,15 @@ export default function App() {
     return string;
   };
 
-  const startSalad = (i) => {
-    if (currentTextValue.trim() === "" || activeSalads[i].length > 0) return;
+  const startSaladByWordsAndVoiceIndex = (wordsUnsplit, voiceIndex, i) => {
+    if (wordsUnsplit.trim() === "" || activeSalads[i].length > 0) return;
 
-    const wordsUnsplit = currentTextValue;
     const salad = buildSalad(wordsUnsplit.split(" "));
 
     webRefs[i].current.injectJavaScript(`
       function startSalad${i}() {
         var u = new SpeechSynthesisUtterance("${salad}");
-        u.voice = speechSynthesis.getVoices()[${currentVoiceIndex}];
+        u.voice = speechSynthesis.getVoices()[${voiceIndex}];
         u.addEventListener("end", function(event) { 
           //window.ReactNativeWebView.postMessage(JSON.stringify({ message: "${MESSAGE_TYPES.END_SALAD}" }))
           startSalad${i}()
@@ -458,7 +545,7 @@ export default function App() {
     `);
 
     activeSalads[i] = `${wordsUnsplit} ${
-      voiceOptions.find((voice) => voice.index == currentVoiceIndex).flag
+      voiceOptions.find((voice) => voice.index == voiceIndex).flag
     }`;
     setActiveSalads(activeSalads);
 
@@ -474,8 +561,9 @@ export default function App() {
       }
       setCurrentWebRef(nextFreeWebRef);
     }
-    // store ref and wordsUnsplit in dictionary of ongoing voices (polling if stopped)
-  };
+  }
+
+  const startSalad = (i) => startSaladByWordsAndVoiceIndex(currentTextValue, currentVoiceIndex, i)
 
   const endSalad = (i) => {
     activeSalads[i] = "";
@@ -524,9 +612,21 @@ export default function App() {
     setCurrentWebRef(0);
   };
 
+  /*
+  const randomSaladPreset = () => {
+    silence()
+    const presetSelection = PRESETS[Math.floor(PRESETS.length * Math.random())]
+    for (element in presetSelection) {
+      if (delay == 0) {
+        startSaladByWordsAndVoiceIndex(element.salad, /* TODO GET INDEX FROM element.lang , /* TODO need list of ready synths)
+      }
+    }
+  }
+  */
+
   return (
     <SafeAreaView style={styles.container}>
-      <Text style={styles.title}>WORD SALAD</Text>
+      <Text style={styles.title}>WORD SALAD [beta]</Text>
       <Picker
         style={styles.picker}
         selectedValue={currentVoiceIndex}
@@ -544,7 +644,7 @@ export default function App() {
           );
         })}
       </Picker>
-      <View style={styles.topBarContainer}>
+      <View style={styles.barContainer}>
         <View style={styles.barSpacer} />
         <TextInput
           style={styles.textInput}
@@ -584,12 +684,27 @@ export default function App() {
         </View>
         <View style={styles.barSpacer} />
       </View>
+      {/*
+      <View style={styles.barContainer}>
+        <View style={styles.barSpacer} />
+        <Button
+          style={styles.button}
+          onPress={randomSaladPreset}
+          title="🥬🌶🥔"
+          color="#FFFFFF"
+        />
+        <View style={styles.barSpacer} />
+      */}
       <Button
         style={styles.button}
         onPress={silence}
         title="SILENCE"
         color="#FF0000"
       />
+      {/*
+        <View style={styles.barSpacer} />
+      </View>
+      */}
       <ScrollView style={styles.salads}>
         {activeSalads
           .map((salad, index) => {
