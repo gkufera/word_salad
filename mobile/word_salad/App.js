@@ -80,7 +80,9 @@ export default function App() {
   ]);
   const [currentVoiceIndex, setCurrentVoiceIndex] = React.useState(0);
   // TODO make this update the UI more regularly
-  const [activeSalads, setActiveSalads] = React.useState({});
+  const [activeSalads, setActiveSalads] = React.useState(
+    Array(NUM_WEB_REFS).fill("")
+  );
 
   const webRefs = [];
   for (var i = 0; i < NUM_WEB_REFS; i++) {
@@ -145,7 +147,7 @@ export default function App() {
       let randomChance = Math.random() * 100;
       if (
         randomChance < CHANCE_OF_SPACE ||
-        string === "" ||
+        string.length == 0 ||
         string[string.length - 1] === " "
       ) {
         string += words[Math.floor(Math.random() * words.length)];
@@ -157,7 +159,7 @@ export default function App() {
   };
 
   const startSalad = (i) => {
-    if (currentTextValue.trim() === "" || i in activeSalads) return;
+    if (currentTextValue.trim() === "" || activeSalads[i].length > 0) return;
 
     const wordsUnsplit = currentTextValue;
     const salad = buildSalad(wordsUnsplit.split(" "));
@@ -178,11 +180,11 @@ export default function App() {
 
     console.log(JSON.stringify(activeSalads));
 
-    if (Object.keys(activeSalads).length == NUM_WEB_REFS) {
+    if (activeSalads.filter((salad) => salad.length > 0) == NUM_WEB_REFS) {
       setCurrentWebRef(-1);
     } else {
       nextFreeWebRef = (i + 1) % NUM_WEB_REFS;
-      while (nextFreeWebRef in activeSalads) {
+      while (activeSalads[nextFreeWebRef].length > 0) {
         nextFreeWebRef = (nextFreeWebRef + 1) % NUM_WEB_REFS;
       }
       setCurrentWebRef(nextFreeWebRef);
@@ -191,7 +193,7 @@ export default function App() {
   };
 
   const endSalad = (i) => {
-    delete activeSalads[i];
+    activeSalads[i] = "";
     setActiveSalads(activeSalads);
     console.log("yoip");
     console.log(JSON.stringify(activeSalads));
@@ -230,7 +232,7 @@ export default function App() {
         speechSynthesis.cancel();
       `);
     });
-    setActiveSalads({});
+    setActiveSalads(Array(NUM_WEB_REFS).fill(""));
     setCurrentWebRef(0);
   };
 
@@ -294,17 +296,22 @@ export default function App() {
         })}
       </Picker>
       <View style={styles.salads}>
-        {Object.keys(activeSalads).map((key, index) => {
-          return (
-            <Button
-              style={styles.button}
-              key={`button ${index}`}
-              onPress={() => stopSalad(key)}
-              title={activeSalads[key]}
-              color="#000000"
-            />
-          );
-        })}
+        {activeSalads
+          .map((salad, index) => {
+            return { salad: salad, index: index };
+          })
+          .filter((saladAndIndex) => saladAndIndex.salad.length > 0)
+          .map((saladAndIndex) => {
+            return (
+              <Button
+                style={styles.button}
+                key={`button ${saladAndIndex.index}`}
+                onPress={() => stopSalad(saladAndIndex.index)}
+                title={saladAndIndex.salad}
+                color="#000000"
+              />
+            );
+          })}
       </View>
       <Button
         style={styles.button}
