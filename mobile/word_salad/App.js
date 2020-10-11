@@ -34,6 +34,7 @@ export default function App() {
       justifyContent: "space-between",
       flexDirection: "row",
       height: PLUS_DIMENSION,
+      paddingBottom: 50,
     },
     textInput: {
       flex: 1,
@@ -79,7 +80,6 @@ export default function App() {
     { label: "loading...", index: 0 },
   ]);
   const [currentVoiceIndex, setCurrentVoiceIndex] = React.useState(0);
-  // TODO make this update the UI more regularly
   const [activeSalads, setActiveSalads] = React.useState(
     Array(NUM_WEB_REFS).fill("")
   );
@@ -238,6 +238,23 @@ export default function App() {
 
   return (
     <SafeAreaView style={styles.container}>
+      <Picker
+        style={styles.picker}
+        selectedValue={currentVoiceIndex}
+        onValueChange={(itemValue, itemIndex) =>
+          setCurrentVoiceIndex(itemValue)
+        }
+      >
+        {voiceOptions.map((voice, i) => {
+          return (
+            <Picker.Item
+              label={voice.label}
+              value={voice.index}
+              key={`picker item ${i}`}
+            />
+          );
+        })}
+      </Picker>
       <View style={styles.topBarContainer}>
         <View style={styles.barSpacer} />
         <TextInput
@@ -278,23 +295,12 @@ export default function App() {
         </View>
         <View style={styles.barSpacer} />
       </View>
-      <Picker
-        style={styles.picker}
-        selectedValue={currentVoiceIndex}
-        onValueChange={(itemValue, itemIndex) =>
-          setCurrentVoiceIndex(itemValue)
-        }
-      >
-        {voiceOptions.map((voice, i) => {
-          return (
-            <Picker.Item
-              label={voice.label}
-              value={voice.index}
-              key={`picker item ${i}`}
-            />
-          );
-        })}
-      </Picker>
+      <Button
+        style={styles.button}
+        onPress={silence}
+        title="SILENCE"
+        color="#FF0000"
+      />
       <View style={styles.salads}>
         {activeSalads
           .map((salad, index) => {
@@ -313,12 +319,7 @@ export default function App() {
             );
           })}
       </View>
-      <Button
-        style={styles.button}
-        onPress={silence}
-        title="SILENCE"
-        color="#FF0000"
-      />
+      <StatusBar style="dark" />
     </SafeAreaView>
   );
 }
