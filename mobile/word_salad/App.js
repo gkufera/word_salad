@@ -4,6 +4,7 @@ import { StyleSheet, Text, TextInput, View, Button } from "react-native";
 import { WebView } from "react-native-webview";
 import Constants from "expo-constants";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { Picker } from "@react-native-community/picker";
 
 export default function App() {
   // The only way we can make multiple simultaneous text to speeches on iOS is via multiple webviews.
@@ -25,6 +26,10 @@ export default function App() {
   for (var i = 0; i < NUM_WEB_REFS; i++) {
     webRefs[i] = useRef(null);
   }
+  const [voiceOptions, setVoiceOptions] = React.useState([
+    { label: "loading...", name: 0 },
+  ]);
+  const [currentVoiceName, setCurrentVoiceName] = React.useState("");
   const placeholder = "type";
   const initialInjectedJavaScript = (i) => `
   document.onclick = function() {
@@ -52,7 +57,7 @@ export default function App() {
   }
   document.body.style.backgroundColor = 'black'
   true; // note: this is required, or you'll sometimes get silent failures
-`; // TODO: pass back the list of voices
+`;
 
   // search for alex and find him if you can.... maybe prompt users to download him if you can't?
 
@@ -119,17 +124,24 @@ export default function App() {
     setCurrentTextValue("");
     const salad = buildSalad(wordsUnsplit.split(" "));
 
-    webRefs[i].current.injectJavaScript(`
-      var u = new SpeechSynthesisUtterance("${salad}");
-      u.voice = speechSynthesis.getVoices()[0];
-      u.addEventListener("end", function(event) { 
-        window.ReactNativeWebView.postMessage(JSON.stringify({ message: "${MESSAGE_TYPES.END_SALAD}" }))
-      });
-      speechSynthesis.speak(u);
-    `);
-
     activeSalads[i] = wordsUnsplit;
     setActiveSalads(activeSalads);
+
+    webRefs[i].current.injectJavaScript(`
+      var u = new SpeechSynthesisUtterance("${salad}");
+      var voices = speechSynthesis.getVoices().filter((voice) => {
+        return voice.name == "${currentVoiceName}";
+      });
+      if (voices.length == 0) {
+        window.ReactNativeWebView.postMessage(JSON.stringify({ message: "${MESSAGE_TYPES.END_SALAD}" }));
+      } else {
+        u.voice = voices[0];
+        u.addEventListener("end", function(event) { 
+          window.ReactNativeWebView.postMessage(JSON.stringify({ message: "${MESSAGE_TYPES.END_SALAD}" }));
+        });
+        speechSynthesis.speak(u);
+      }
+    `);
 
     console.log(JSON.stringify(activeSalads));
 
@@ -155,6 +167,15 @@ export default function App() {
 
   const handleVoices = (voices) => {
     console.log(JSON.stringify(voices));
+    setVoiceOptions(
+      voices.map((voice) => {
+        return {
+          label: voice.name,
+          name: voice.name,
+        };
+      })
+    );
+    setCurrentVoiceName(voiceOptions[0].index);
   };
 
   const handleMessage = (i, event) => {
@@ -215,13 +236,31 @@ export default function App() {
         </View>
         <View style={styles.barSpacer} />
       </View>
-      {Object.keys(activeSalads).map((key, index) => {
-        return (
-          <Text key={index}>
-            {key}: {activeSalads[key]}
-          </Text>
-        );
-      })}
+      <View>
+        <Picker
+          selectedValue={currentVoiceName}
+          style={{ height: 200, top: plusDimension, left: 0, right: 0 }}
+          onValueChange={(itemValue, itemIndex) =>
+            setCurrentVoiceName(itemValue)
+          }
+        >
+          {voiceOptions.map((voice, i) => {
+            return (
+              <Picker.Item label={voice.label} value={voice.name} key={i} />
+            );
+          })}
+        </Picker>
+      </View>
+      <View>
+        {Object.keys(activeSalads).map((key, index) => {
+          return (
+            <Text key={index}>
+              {key}: {activeSalads[key]}
+            </Text>
+          );
+        })}
+        <View style={{ height: 300 }} />
+      </View>
       <View style={{ height: 300 }} />
     </SafeAreaView>
   );
