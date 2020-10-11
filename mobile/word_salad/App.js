@@ -1,6 +1,13 @@
 import { StatusBar } from "expo-status-bar";
 import React, { useRef } from "react";
-import { StyleSheet, Text, TextInput, View, Button } from "react-native";
+import {
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+  Button,
+  ScrollView,
+} from "react-native";
 import { WebView } from "react-native-webview";
 import Constants from "expo-constants";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -326,7 +333,6 @@ export default function App() {
     salads: {
       flex: 1,
       minHeight: 500,
-      justifyContent: "flex-start",
       paddingTop: 30,
     },
     button: {
@@ -574,7 +580,7 @@ export default function App() {
         title="SILENCE"
         color="#FF0000"
       />
-      <View style={styles.salads}>
+      <ScrollView style={styles.salads}>
         {activeSalads
           .map((salad, index) => {
             return { salad: salad, index: index };
@@ -591,7 +597,7 @@ export default function App() {
               />
             );
           })}
-      </View>
+      </ScrollView>
       <StatusBar style="auto" />
     </SafeAreaView>
   );
