@@ -389,15 +389,22 @@ export default function App() {
   const handleVoices = (voices) => {
     console.log(JSON.stringify(voices));
     setVoiceOptions(
-      voices.map((voice) => {
-        const countryCode = voice.lang.slice(-2);
-        const flag = getFlag(countryCode);
+      voices
+        .filter(
+          (voice, index, self) =>
+            self.find((otherVoice) => otherVoice.lang === voice.lang).index ===
+            voice.index
+        )
+        .map((voice) => {
+          const countryCode = voice.lang.slice(-2);
+          const flag = getFlag(countryCode);
 
-        return {
-          label: `${voice.name} ${flag}`,
-          index: voice.index,
-        };
-      })
+          return {
+            label: `${voice.lang} ${flag}`,
+            index: voice.index,
+            flag: flag,
+          };
+        })
     );
     const alex = voices.find((voice) => voice.name.includes("Alex"));
     const def = voices.filter((voice) => voice.default == true);
@@ -450,9 +457,9 @@ export default function App() {
       document.body.style.backgroundColor = 'white'
     `);
 
-    activeSalads[i] = `${
-      voiceOptions.find((voice) => voice.index == currentVoiceIndex).label
-    }: ${wordsUnsplit}`;
+    activeSalads[i] = `${wordsUnsplit} ${
+      voiceOptions.find((voice) => voice.index == currentVoiceIndex).flag
+    }`;
     setActiveSalads(activeSalads);
 
     console.log(JSON.stringify(activeSalads));
