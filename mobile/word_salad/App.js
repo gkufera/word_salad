@@ -27,9 +27,9 @@ export default function App() {
     webRefs[i] = useRef(null);
   }
   const [voiceOptions, setVoiceOptions] = React.useState([
-    { label: "loading...", name: 0 },
+    { label: "loading...", index: 0 },
   ]);
-  const [currentVoiceName, setCurrentVoiceName] = React.useState("");
+  const [currentVoiceIndex, setCurrentVoiceIndex] = React.useState(0);
   const placeholder = "type";
   const initialInjectedJavaScript = (i) => `
   document.onclick = function() {
@@ -57,7 +57,7 @@ export default function App() {
   }
   document.body.style.backgroundColor = 'black'
   true; // note: this is required, or you'll sometimes get silent failures
-`;
+`; // TODO: pass back the list of voices
 
   // search for alex and find him if you can.... maybe prompt users to download him if you can't?
 
@@ -124,24 +124,17 @@ export default function App() {
     setCurrentTextValue("");
     const salad = buildSalad(wordsUnsplit.split(" "));
 
-    activeSalads[i] = wordsUnsplit;
-    setActiveSalads(activeSalads);
-
     webRefs[i].current.injectJavaScript(`
       var u = new SpeechSynthesisUtterance("${salad}");
-      var voices = speechSynthesis.getVoices().filter((voice) => {
-        return voice.name == "${currentVoiceName}";
+      u.voice = speechSynthesis.getVoices()[${currentVoiceIndex}];
+      u.addEventListener("end", function(event) { 
+        window.ReactNativeWebView.postMessage(JSON.stringify({ message: "${MESSAGE_TYPES.END_SALAD}" }))
       });
-      if (voices.length == 0) {
-        window.ReactNativeWebView.postMessage(JSON.stringify({ message: "${MESSAGE_TYPES.END_SALAD}" }));
-      } else {
-        u.voice = voices[0];
-        u.addEventListener("end", function(event) { 
-          window.ReactNativeWebView.postMessage(JSON.stringify({ message: "${MESSAGE_TYPES.END_SALAD}" }));
-        });
-        speechSynthesis.speak(u);
-      }
+      speechSynthesis.speak(u);
     `);
+
+    activeSalads[i] = wordsUnsplit;
+    setActiveSalads(activeSalads);
 
     console.log(JSON.stringify(activeSalads));
 
@@ -171,11 +164,11 @@ export default function App() {
       voices.map((voice) => {
         return {
           label: voice.name,
-          name: voice.name,
+          index: voice.index,
         };
       })
     );
-    setCurrentVoiceName(voiceOptions[0].index);
+    setCurrentVoiceIndex(voiceOptions[0].index);
   };
 
   const handleMessage = (i, event) => {
@@ -238,15 +231,15 @@ export default function App() {
       </View>
       <View>
         <Picker
-          selectedValue={currentVoiceName}
-          style={{ height: 200, top: plusDimension, left: 0, right: 0 }}
+          selectedValue={currentVoiceIndex}
+          style={{ height: 50, left: 0, right: 0 }}
           onValueChange={(itemValue, itemIndex) =>
-            setCurrentVoiceName(itemValue)
+            setCurrentVoiceIndex(itemValue)
           }
         >
           {voiceOptions.map((voice, i) => {
             return (
-              <Picker.Item label={voice.label} value={voice.name} key={i} />
+              <Picker.Item label={voice.label} value={voice.index} key={i} />
             );
           })}
         </Picker>
