@@ -12,7 +12,7 @@ export default function App() {
   // ...and Safari needs input in order to use text to speech.
   // So this is an annoyingly complicated project.
 
-  const NUM_WEB_REFS = 10;
+  const NUM_WEB_REFS = 20;
   const NUM_WORD_SALAD_WORDS = 500;
   const CHANCE_OF_SPACE = 50;
   const MESSAGE_TYPES = {
@@ -29,12 +29,17 @@ export default function App() {
       justifyContent: "space-between",
       backgroundColor: "#FFFFFF",
     },
+    title: {
+      paddingTop: 10,
+      fontSize: 30,
+      textAlign: "center",
+    },
     topBarContainer: {
       flex: 1,
       justifyContent: "space-between",
       flexDirection: "row",
       height: PLUS_DIMENSION,
-      paddingBottom: 50,
+      paddingBottom: 75,
     },
     textInput: {
       flex: 1,
@@ -59,7 +64,7 @@ export default function App() {
       top: 0,
       bottom: 0,
     },
-    invisiblePlusWebView: {},
+    invisiblePlusWebView: {}, // TODO these aren't invisible
     picker: {
       height: 200,
       left: 0,
@@ -73,6 +78,7 @@ export default function App() {
     },
     button: {
       height: 20,
+      fontSize: 12,
     },
   });
 
@@ -176,6 +182,7 @@ export default function App() {
         speechSynthesis.speak(u);
       }
       startSalad${i}()
+      document.body.style.backgroundColor = 'white'
     `);
 
     activeSalads[i] = `${
@@ -185,6 +192,7 @@ export default function App() {
 
     console.log(JSON.stringify(activeSalads));
 
+    // TODO there is def a problem here on the last one
     if (activeSalads.filter((salad) => salad.length > 0) == NUM_WEB_REFS) {
       setCurrentWebRef(-1);
     } else {
@@ -210,6 +218,7 @@ export default function App() {
     console.log(`stopping ${i}`);
     webRefs[i].current.injectJavaScript(`
       speechSynthesis.cancel();
+      document.body.style.backgroundColor = 'black'
     `);
     endSalad(i);
   };
@@ -236,6 +245,7 @@ export default function App() {
     webRefs.map((webRef) => {
       webRef.current.injectJavaScript(`
         speechSynthesis.cancel();
+        document.body.style.backgroundColor = 'black'
       `);
     });
     setActiveSalads(Array(NUM_WEB_REFS).fill(""));
@@ -244,6 +254,7 @@ export default function App() {
 
   return (
     <SafeAreaView style={styles.container}>
+      <Text style={styles.title}>WORD SALAD</Text>
       <Picker
         style={styles.picker}
         selectedValue={currentVoiceIndex}
