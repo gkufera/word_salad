@@ -336,7 +336,7 @@ export default function App() {
             );
           })}
       </View>
-      <StatusBar style="dark" />
+      <StatusBar style="auto" />
     </SafeAreaView>
   );
 }
