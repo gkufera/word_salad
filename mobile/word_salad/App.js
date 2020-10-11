@@ -10,17 +10,45 @@ export default function App() {
   // ...and Safari needs input in order to use text to speech.
   // So this is an annoyingly complicated project.
 
-  const [currentTextValue, onChangeText] = React.useState("");
+  const [currentTextValue, setCurrentTextValue] = React.useState("");
   const [currentWebRef, setCurrentWebRef] = React.useState(0);
+  const [activeSalads, setActiveSalads] = React.useState({});
   const webRefs = [];
   const NUM_WEB_REFS = 10;
+  const NUM_WORD_SALAD_WORDS = 100;
+  const CHANCE_OF_SPACE = 50;
+  const MESSAGE_TYPES = {
+    START_SALAD: "STARTSALAD",
+    END_SALAD: "ENDSALAD",
+    VOICES: "VOICES",
+  };
   for (var i = 0; i < NUM_WEB_REFS; i++) {
     webRefs[i] = useRef(null);
   }
   const placeholder = "type";
-  const theCode = `
+  const initialInjectedJavaScript = (i) => `
   document.onclick = function() {
-    window.ReactNativeWebView.postMessage("")
+    window.ReactNativeWebView.postMessage(JSON.stringify({ message: "${
+      MESSAGE_TYPES.START_SALAD
+    }" }))
+  }
+  ${
+    i == 0
+      ? `
+  window.ReactNativeWebView.postMessage(JSON.stringify({ 
+    message: "${MESSAGE_TYPES.VOICES}", 
+    voices: speechSynthesis.getVoices().map((voice, i) => {
+      return {
+        default: voice.default,
+        lang: voice.lang,
+        localService: voice.localService,
+        name: voice.name,
+        index: i,
+      };
+    })
+  }))
+  `
+      : ``
   }
   document.body.style.backgroundColor = 'black'
   true; // note: this is required, or you'll sometimes get silent failures
@@ -54,7 +82,7 @@ export default function App() {
       width: 20,
     },
     plusContainer: {
-      //height: plusDimension,
+      height: plusDimension,
       width: plusDimension,
     },
     visiblePlusWebView: {
@@ -64,24 +92,85 @@ export default function App() {
       top: 0,
       bottom: 0,
     },
-    invisiblePlusWebView: {
-      height: 0,
-      width: 0,
-      position: "absolute",
-      top: plusDimension,
-      bottom: 0,
-    },
+    invisiblePlusWebView: {},
   });
 
+  const buildSalad = (words) => {
+    var string = "";
+    for (var i = 0; i < NUM_WORD_SALAD_WORDS; i++) {
+      let randomChance = Math.random() * 100;
+      if (
+        randomChance < CHANCE_OF_SPACE ||
+        string === "" ||
+        string[string.length - 1] === " "
+      ) {
+        string += words[Math.floor(Math.random() * words.length)];
+      } else {
+        string += " ";
+      }
+    }
+    return string;
+  };
+
   const startSalad = (i) => {
-    // get ref from event.nativeEvent.data
-    // inject this JS
+    if (currentTextValue.trim() === "" || i in activeSalads) return;
+
+    const wordsUnsplit = currentTextValue;
+    setCurrentTextValue("");
+    const salad = buildSalad(wordsUnsplit.split(" "));
+
     webRefs[i].current.injectJavaScript(`
-    var u = new SpeechSynthesisUtterance("${currentTextValue}");
-    u.voice = speechSynthesis.getVoices()[1]
-    speechSynthesis.speak(u);
+      var u = new SpeechSynthesisUtterance("${salad}");
+      u.voice = speechSynthesis.getVoices()[0];
+      u.addEventListener("end", function(event) { 
+        window.ReactNativeWebView.postMessage(JSON.stringify({ message: "${MESSAGE_TYPES.END_SALAD}" }))
+      });
+      speechSynthesis.speak(u);
     `);
-    // store ref and currentTextValue in dictionary of ongoing voices (polling if stopped)
+
+    activeSalads[i] = wordsUnsplit;
+    setActiveSalads(activeSalads);
+
+    console.log(JSON.stringify(activeSalads));
+
+    if (Object.keys(activeSalads).length == NUM_WEB_REFS) {
+      setCurrentWebRef(-1);
+    } else {
+      nextFreeWebRef = (i + 1) % NUM_WEB_REFS;
+      while (nextFreeWebRef in activeSalads) {
+        nextFreeWebRef = (nextFreeWebRef + 1) % NUM_WEB_REFS;
+      }
+      setCurrentWebRef(nextFreeWebRef);
+    }
+    // store ref and wordsUnsplit in dictionary of ongoing voices (polling if stopped)
+  };
+
+  const endSalad = (i) => {
+    delete activeSalads[i];
+    setActiveSalads(activeSalads);
+    console.log("yoip");
+    console.log(JSON.stringify(activeSalads));
+    console.log("yoip");
+  };
+
+  const handleVoices = (voices) => {
+    console.log(JSON.stringify(voices));
+  };
+
+  const handleMessage = (i, event) => {
+    console.log(event.nativeEvent.data);
+    const data = JSON.parse(event.nativeEvent.data);
+    switch (data.message) {
+      case MESSAGE_TYPES.START_SALAD:
+        startSalad(i);
+        break;
+      case MESSAGE_TYPES.END_SALAD:
+        endSalad(i);
+        break;
+      case MESSAGE_TYPES.VOICES:
+        handleVoices(data.voices);
+        break;
+    }
   };
 
   return (
@@ -90,7 +179,7 @@ export default function App() {
         <View style={styles.barSpacer} />
         <TextInput
           style={styles.textInput}
-          onChangeText={(text) => onChangeText(text)}
+          onChangeText={(text) => setCurrentTextValue(text)}
           value={currentTextValue}
           autoCorrect={false}
           autoFocus={true}
@@ -110,11 +199,12 @@ export default function App() {
                     ? styles.visiblePlusWebView
                     : styles.invisiblePlusWebView
                 }
+                hidden={currentWebRef != i}
                 source={{
                   html: `<body />`,
                 }}
-                injectedJavaScript={theCode}
-                onMessage={(event) => startSalad(i)}
+                injectedJavaScript={initialInjectedJavaScript(i)}
+                onMessage={(event) => handleMessage(i, event)}
                 ignoreSilentHardwareSwitch={true}
                 scrollEnabled={false}
                 scalesPageToFit={Platform.OS === "android"}
@@ -125,6 +215,13 @@ export default function App() {
         </View>
         <View style={styles.barSpacer} />
       </View>
+      {Object.keys(activeSalads).map((key, index) => {
+        return (
+          <Text key={index}>
+            {key}: {activeSalads[key]}
+          </Text>
+        );
+      })}
       <View style={{ height: 300 }} />
     </SafeAreaView>
   );
