@@ -13,7 +13,7 @@ export default function App() {
   // So this is an annoyingly complicated project.
 
   const NUM_WEB_REFS = 10;
-  const NUM_WORD_SALAD_WORDS = 100;
+  const NUM_WORD_SALAD_WORDS = 500;
   const CHANCE_OF_SPACE = 50;
   const MESSAGE_TYPES = {
     START_SALAD: "STARTSALAD",
@@ -166,12 +166,16 @@ export default function App() {
     const salad = buildSalad(wordsUnsplit.split(" "));
 
     webRefs[i].current.injectJavaScript(`
-      var u = new SpeechSynthesisUtterance("${salad}");
-      u.voice = speechSynthesis.getVoices()[${currentVoiceIndex}];
-      u.addEventListener("end", function(event) { 
-        window.ReactNativeWebView.postMessage(JSON.stringify({ message: "${MESSAGE_TYPES.END_SALAD}" }))
-      });
-      speechSynthesis.speak(u);
+      function startSalad${i}() {
+        var u = new SpeechSynthesisUtterance("${salad}");
+        u.voice = speechSynthesis.getVoices()[${currentVoiceIndex}];
+        u.addEventListener("end", function(event) { 
+          //window.ReactNativeWebView.postMessage(JSON.stringify({ message: "${MESSAGE_TYPES.END_SALAD}" }))
+          startSalad${i}()
+        });
+        speechSynthesis.speak(u);
+      }
+      startSalad${i}()
     `);
 
     activeSalads[i] = `${
@@ -217,6 +221,7 @@ export default function App() {
       case MESSAGE_TYPES.START_SALAD:
         startSalad(i);
         break;
+      // THIS DOESN'T HAPPEN AT THE MOMENT
       case MESSAGE_TYPES.END_SALAD:
         endSalad(i);
         break;
