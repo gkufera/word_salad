@@ -400,7 +400,10 @@ export default function App() {
       })
     );
     const alex = voices.find((voice) => voice.name.includes("Alex"));
-    setCurrentVoiceIndex(alex ? alex.index : voiceOptions[0].index);
+    const def = voices.filter((voice) => voice.default == true);
+    setCurrentVoiceIndex(
+      alex ? alex.index : def.length > 0 ? def[0].index : voiceOptions[0].index
+    );
     Audio.setAudioModeAsync({
       allowsRecordingIOS: false,
       interruptionModeIOS: Audio.INTERRUPTION_MODE_IOS_DO_NOT_MIX,
