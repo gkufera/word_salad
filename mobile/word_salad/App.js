@@ -290,12 +290,6 @@ export default function App() {
           );
         })}
       </Picker>
-      <Button
-        style={styles.button}
-        onPress={silence}
-        title="SILENCE"
-        color="#FF0000"
-      />
       <View style={styles.salads}>
         {Object.keys(activeSalads).map((key, index) => {
           return (
@@ -309,6 +303,12 @@ export default function App() {
           );
         })}
       </View>
+      <Button
+        style={styles.button}
+        onPress={silence}
+        title="SILENCE"
+        color="#FF0000"
+      />
     </SafeAreaView>
   );
 }
