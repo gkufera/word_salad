@@ -57,7 +57,7 @@ export default function App() {
   }
   document.body.style.backgroundColor = 'black'
   true; // note: this is required, or you'll sometimes get silent failures
-`; // TODO: pass back the list of voices
+`;
 
   // search for alex and find him if you can.... maybe prompt users to download him if you can't?
 
@@ -176,7 +176,8 @@ export default function App() {
         };
       })
     );
-    setCurrentVoiceIndex(voiceOptions[0].index);
+    const alex = voices.find((voice) => voice.name.includes("Alex"));
+    setCurrentVoiceIndex(alex ? alex.index : voiceOptions[0].index);
   };
 
   const handleMessage = (i, event) => {
