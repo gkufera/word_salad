@@ -67,6 +67,7 @@ export default function App() {
     salads: {
       flex: 1,
       minHeight: 500,
+      justifyContent: "center",
     },
     button: {
       height: 20,
@@ -170,7 +171,9 @@ export default function App() {
       speechSynthesis.speak(u);
     `);
 
-    activeSalads[i] = wordsUnsplit;
+    activeSalads[i] = `${
+      voiceOptions.find((voice) => voice.index == currentVoiceIndex).label
+    }: ${wordsUnsplit}`;
     setActiveSalads(activeSalads);
 
     console.log(JSON.stringify(activeSalads));
