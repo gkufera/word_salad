@@ -5,16 +5,13 @@ import { WebView } from "react-native-webview";
 import Constants from "expo-constants";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Picker } from "@react-native-community/picker";
+import { Audio } from "expo-av";
 
 export default function App() {
   // The only way we can make multiple simultaneous text to speeches on iOS is via multiple webviews.
   // ...and Safari needs input in order to use text to speech.
   // So this is an annoyingly complicated project.
 
-  const [currentTextValue, setCurrentTextValue] = React.useState("");
-  const [currentWebRef, setCurrentWebRef] = React.useState(0);
-  const [activeSalads, setActiveSalads] = React.useState({});
-  const webRefs = [];
   const NUM_WEB_REFS = 10;
   const NUM_WORD_SALAD_WORDS = 100;
   const CHANCE_OF_SPACE = 50;
@@ -23,45 +20,9 @@ export default function App() {
     END_SALAD: "ENDSALAD",
     VOICES: "VOICES",
   };
-  for (var i = 0; i < NUM_WEB_REFS; i++) {
-    webRefs[i] = useRef(null);
-  }
-  const [voiceOptions, setVoiceOptions] = React.useState([
-    { label: "loading...", index: 0 },
-  ]);
-  const [currentVoiceIndex, setCurrentVoiceIndex] = React.useState(0);
-  const placeholder = "type";
-  const initialInjectedJavaScript = (i) => `
-  document.onclick = function() {
-    window.ReactNativeWebView.postMessage(JSON.stringify({ message: "${
-      MESSAGE_TYPES.START_SALAD
-    }" }))
-  }
-  ${
-    i == 0
-      ? `
-  window.ReactNativeWebView.postMessage(JSON.stringify({ 
-    message: "${MESSAGE_TYPES.VOICES}", 
-    voices: speechSynthesis.getVoices().map((voice, i) => {
-      return {
-        default: voice.default,
-        lang: voice.lang,
-        localService: voice.localService,
-        name: voice.name,
-        index: i,
-      };
-    })
-  }))
-  `
-      : ``
-  }
-  document.body.style.backgroundColor = 'black'
-  true; // note: this is required, or you'll sometimes get silent failures
-`;
+  const PLACEHOLDER = "type";
+  const PLUS_DIMENSION = 50;
 
-  // search for alex and find him if you can.... maybe prompt users to download him if you can't?
-
-  const plusDimension = 50;
   const styles = StyleSheet.create({
     container: {
       flex: 1,
@@ -72,12 +33,12 @@ export default function App() {
       flex: 1,
       justifyContent: "space-between",
       flexDirection: "row",
-      height: plusDimension,
+      height: PLUS_DIMENSION,
     },
     textInput: {
       flex: 1,
-      minWidth: plusDimension * 3,
-      height: plusDimension,
+      minWidth: PLUS_DIMENSION * 3,
+      height: PLUS_DIMENSION,
       borderColor: "#000000",
       borderWidth: 1,
       paddingLeft: 20,
@@ -87,12 +48,12 @@ export default function App() {
       width: 20,
     },
     plusContainer: {
-      height: plusDimension,
-      width: plusDimension,
+      height: PLUS_DIMENSION,
+      width: PLUS_DIMENSION,
     },
     visiblePlusWebView: {
-      height: plusDimension,
-      width: plusDimension,
+      height: PLUS_DIMENSION,
+      width: PLUS_DIMENSION,
       position: "absolute",
       top: 0,
       bottom: 0,
@@ -105,8 +66,77 @@ export default function App() {
     },
     salads: {
       flex: 1,
+      minHeight: 500,
+    },
+    button: {
+      height: 20,
     },
   });
+
+  const [currentTextValue, setCurrentTextValue] = React.useState("");
+  const [voiceOptions, setVoiceOptions] = React.useState([
+    { label: "loading...", index: 0 },
+  ]);
+  const [currentVoiceIndex, setCurrentVoiceIndex] = React.useState(0);
+  // TODO make this update the UI more regularly
+  const [activeSalads, setActiveSalads] = React.useState({});
+
+  const webRefs = [];
+  for (var i = 0; i < NUM_WEB_REFS; i++) {
+    webRefs[i] = useRef(null);
+  }
+  const [currentWebRef, setCurrentWebRef] = React.useState(0);
+
+  // JS injected to each webview. On click, we make a salad.
+  const initialInjectedJavaScript = (i) => `
+    document.onclick = function() {
+      window.ReactNativeWebView.postMessage(JSON.stringify({ message: "${
+        MESSAGE_TYPES.START_SALAD
+      }" }))
+    }
+    ${
+      // On loading the first webview we collect voices
+      i == 0
+        ? `
+    window.ReactNativeWebView.postMessage(JSON.stringify({ 
+      message: "${MESSAGE_TYPES.VOICES}", 
+      voices: speechSynthesis.getVoices().map((voice, i) => {
+        return {
+          default: voice.default,
+          lang: voice.lang,
+          localService: voice.localService,
+          name: voice.name,
+          index: i,
+        };
+      })
+    }))
+    `
+        : ``
+    }
+    document.body.style.backgroundColor = 'black'
+    true; // note: this is required, or you'll sometimes get silent failures
+  `;
+
+  const handleVoices = (voices) => {
+    console.log(JSON.stringify(voices));
+    setVoiceOptions(
+      voices.map((voice) => {
+        return {
+          label: `${voice.name} (${voice.lang})`,
+          index: voice.index,
+        };
+      })
+    );
+    const alex = voices.find((voice) => voice.name.includes("Alex"));
+    setCurrentVoiceIndex(alex ? alex.index : voiceOptions[0].index);
+    Audio.setAudioModeAsync({
+      allowsRecordingIOS: false,
+      interruptionModeIOS: Audio.INTERRUPTION_MODE_IOS_DO_NOT_MIX,
+      playsInSilentModeIOS: true,
+      shouldDuckAndroid: false,
+      interruptionModeAndroid: Audio.INTERRUPTION_MODE_ANDROID_DO_NOT_MIX,
+    });
+  };
 
   const buildSalad = (words) => {
     var string = "";
@@ -166,18 +196,12 @@ export default function App() {
     setCurrentWebRef(i);
   };
 
-  const handleVoices = (voices) => {
-    console.log(JSON.stringify(voices));
-    setVoiceOptions(
-      voices.map((voice) => {
-        return {
-          label: `${voice.name} (${voice.lang})`,
-          index: voice.index,
-        };
-      })
-    );
-    const alex = voices.find((voice) => voice.name.includes("Alex"));
-    setCurrentVoiceIndex(alex ? alex.index : voiceOptions[0].index);
+  const stopSalad = (i) => {
+    console.log(`stopping ${i}`);
+    webRefs[i].current.injectJavaScript(`
+      speechSynthesis.cancel();
+    `);
+    endSalad(i);
   };
 
   const handleMessage = (i, event) => {
@@ -207,14 +231,6 @@ export default function App() {
     setCurrentWebRef(0);
   };
 
-  const stopSalad = (i) => {
-    console.log(`stopping ${i}`);
-    webRefs[i].current.injectJavaScript(`
-      speechSynthesis.cancel();
-    `);
-    endSalad(i);
-  };
-
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.topBarContainer}>
@@ -226,7 +242,7 @@ export default function App() {
           autoCorrect={false}
           autoFocus={true}
           autoCapitalize={"none"}
-          placeholder={placeholder}
+          placeholder={PLACEHOLDER}
           returnKeyType={"none"}
         />
         <View style={styles.barSpacer} />
@@ -274,11 +290,17 @@ export default function App() {
           );
         })}
       </Picker>
-      <Button onPress={silence} title="SILENCE" color="#FF0000" />
+      <Button
+        style={styles.button}
+        onPress={silence}
+        title="SILENCE"
+        color="#FF0000"
+      />
       <View style={styles.salads}>
         {Object.keys(activeSalads).map((key, index) => {
           return (
             <Button
+              style={styles.button}
               key={`button ${index}`}
               onPress={() => stopSalad(key)}
               title={activeSalads[key]}
@@ -286,9 +308,7 @@ export default function App() {
             />
           );
         })}
-        <View style={{ height: 300 }} />
       </View>
-      <View style={{ height: 300 }} />
     </SafeAreaView>
   );
 }
