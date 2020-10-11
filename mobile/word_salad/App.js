@@ -98,6 +98,14 @@ export default function App() {
       bottom: 0,
     },
     invisiblePlusWebView: {},
+    picker: {
+      height: 200,
+      left: 0,
+      right: 0,
+    },
+    salads: {
+      flex: 1,
+    },
   });
 
   const buildSalad = (words) => {
@@ -121,7 +129,6 @@ export default function App() {
     if (currentTextValue.trim() === "" || i in activeSalads) return;
 
     const wordsUnsplit = currentTextValue;
-    setCurrentTextValue("");
     const salad = buildSalad(wordsUnsplit.split(" "));
 
     webRefs[i].current.injectJavaScript(`
@@ -156,6 +163,7 @@ export default function App() {
     console.log("yoip");
     console.log(JSON.stringify(activeSalads));
     console.log("yoip");
+    setCurrentWebRef(i);
   };
 
   const handleVoices = (voices) => {
@@ -163,7 +171,7 @@ export default function App() {
     setVoiceOptions(
       voices.map((voice) => {
         return {
-          label: voice.name,
+          label: `${voice.name} (${voice.lang})`,
           index: voice.index,
         };
       })
@@ -185,6 +193,25 @@ export default function App() {
         handleVoices(data.voices);
         break;
     }
+  };
+
+  const silence = () => {
+    console.log(`SILENCE`);
+    webRefs.map((webRef) => {
+      webRef.current.injectJavaScript(`
+        speechSynthesis.cancel();
+      `);
+    });
+    setActiveSalads({});
+    setCurrentWebRef(0);
+  };
+
+  const stopSalad = (i) => {
+    console.log(`stopping ${i}`);
+    webRefs[i].current.injectJavaScript(`
+      speechSynthesis.cancel();
+    `);
+    endSalad(i);
   };
 
   return (
@@ -229,27 +256,33 @@ export default function App() {
         </View>
         <View style={styles.barSpacer} />
       </View>
-      <View>
-        <Picker
-          selectedValue={currentVoiceIndex}
-          style={{ height: 50, left: 0, right: 0 }}
-          onValueChange={(itemValue, itemIndex) =>
-            setCurrentVoiceIndex(itemValue)
-          }
-        >
-          {voiceOptions.map((voice, i) => {
-            return (
-              <Picker.Item label={voice.label} value={voice.index} key={i} />
-            );
-          })}
-        </Picker>
-      </View>
-      <View>
+      <Picker
+        style={styles.picker}
+        selectedValue={currentVoiceIndex}
+        onValueChange={(itemValue, itemIndex) =>
+          setCurrentVoiceIndex(itemValue)
+        }
+      >
+        {voiceOptions.map((voice, i) => {
+          return (
+            <Picker.Item
+              label={voice.label}
+              value={voice.index}
+              key={`picker item ${i}`}
+            />
+          );
+        })}
+      </Picker>
+      <Button onPress={silence} title="SILENCE" color="#FF0000" />
+      <View style={styles.salads}>
         {Object.keys(activeSalads).map((key, index) => {
           return (
-            <Text key={index}>
-              {key}: {activeSalads[key]}
-            </Text>
+            <Button
+              key={`button ${index}`}
+              onPress={() => stopSalad(key)}
+              title={activeSalads[key]}
+              color="#000000"
+            />
           );
         })}
         <View style={{ height: 300 }} />
