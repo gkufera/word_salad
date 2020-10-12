@@ -361,7 +361,7 @@ const PRESETS = [
     {
       lang: 'en-US',
       salad: 'potato',
-      delay: 2000,
+      delay: 5000,
     },
   ],
 ]
@@ -458,7 +458,6 @@ export default function App() {
   for (var i = 0; i < NUM_WEB_REFS; i++) {
     webRefs[i] = useRef(null);
   }
-  const [currentWebRef, setCurrentWebRef] = React.useState(0);
 
   // JS injected to each webview. On click, we make a salad.
   const initialInjectedJavaScript = (i) => `
@@ -548,48 +547,39 @@ export default function App() {
     return string;
   };
 
-  const startSaladByWordsAndVoiceIndexAndWebView = (wordsUnsplit, voiceIndex, i) => {
-    if (wordsUnsplit.trim() === "" || activeSalads[i].length > 0) return;
+  const startSaladByWordsAndVoiceIndex = (wordsUnsplit, voiceIndex) => {
+    if (wordsUnsplit.trim() === "" || activeSalads.filter((salad) => salad.length > 0) == NUM_WEB_REFS) return;
 
     const salad = buildSalad(wordsUnsplit.split(" "));
 
-    webRefs[i].current.injectJavaScript(`
-      function startSalad${i}() {
+    var nextFreeWebRef = 0;
+    while (activeSalads[nextFreeWebRef] && activeSalads[nextFreeWebRef].length > 0) {
+      nextFreeWebRef++;
+    }
+
+    webRefs[nextFreeWebRef].current.injectJavaScript(`
+      speechSynthesis.cancel();
+      function startSalad${nextFreeWebRef}() {
         var u = new SpeechSynthesisUtterance("${salad}");
         u.voice = speechSynthesis.getVoices()[${voiceIndex}];
         u.addEventListener("end", function(event) { 
           //window.ReactNativeWebView.postMessage(JSON.stringify({ message: "${MESSAGE_TYPES.END_SALAD}" }))
-          startSalad${i}()
+          startSalad${nextFreeWebRef}()
         });
         speechSynthesis.speak(u);
       }
-      startSalad${i}()
+      startSalad${nextFreeWebRef}()
     `);
 
-    activeSalads[i] = `${wordsUnsplit} ${
+    activeSalads[nextFreeWebRef] = `${wordsUnsplit} ${
       voiceOptions.find((voice) => voice.index == voiceIndex).flag
     }`;
     setActiveSalads(activeSalads);
 
     console.log(JSON.stringify(activeSalads));
-
-    // TODO there is def a problem here on the last one
-    if (activeSalads.filter((salad) => salad.length > 0) == NUM_WEB_REFS) {
-      setCurrentWebRef(-1);
-    } else {
-      var nextFreeWebRef = (i + 1) % NUM_WEB_REFS;
-      while (activeSalads[nextFreeWebRef].length > 0) {
-        nextFreeWebRef = (nextFreeWebRef + 1) % NUM_WEB_REFS;
-      }
-      setCurrentWebRef(nextFreeWebRef);
-    }
   }
 
-  const startSaladByWebView = (i) => startSaladByWordsAndVoiceIndexAndWebView(currentTextValue, currentVoiceIndex, i)
-
-  const startSaladByWordsAndVoiceIndex = (wordsUnsplit, voiceIndex) => startSaladByWordsAndVoiceIndexAndWebView(wordsUnsplit, voiceIndex, currentWebRef)
-
-  const startSalad = () => startSaladByWordsAndVoiceIndexAndWebView(currentTextValue, currentVoiceIndex, currentWebRef)
+  const startSalad = () => startSaladByWordsAndVoiceIndex(currentTextValue, currentVoiceIndex)
 
   const endSalad = (i) => {
     activeSalads[i] = "";
@@ -597,7 +587,6 @@ export default function App() {
     console.log("yoip");
     console.log(JSON.stringify(activeSalads));
     console.log("yoip");
-    setCurrentWebRef(i);
   };
 
   const stopSalad = (i) => {
@@ -650,7 +639,6 @@ export default function App() {
       `);
     });
     setActiveSalads(Array(NUM_WEB_REFS).fill(""));
-    setCurrentWebRef(0);
   };
 
   const randomSaladPreset = () => {
@@ -668,9 +656,9 @@ export default function App() {
         }
       }
       if (element.delay == 0) {
-        startSalad()
+        setTimeout(startSalad, 200)
       } else {
-        setTimeout(startSalad, element.delay)
+        setTimeout(startSalad, element.delay + 200)
       }
     }
   }
@@ -685,7 +673,6 @@ export default function App() {
               ref={webRefs[i]}
               key={i}
               style={styles.webView}
-              hidden={currentWebRef != i}
               source={{
                 html: `<body />`,
               }}
