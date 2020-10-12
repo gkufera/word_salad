@@ -548,7 +548,7 @@ export default function App() {
   };
 
   const startSaladByWordsAndVoiceIndex = (wordsUnsplit, voiceIndex) => {
-    if (wordsUnsplit.trim() === "" || activeSalads.filter((salad) => salad.length > 0) == NUM_WEB_REFS) return;
+    if (wordsUnsplit.trim() === "" || activeSalads.filter((salad) => salad.length > 0).length == NUM_WEB_REFS) return;
 
     const salad = buildSalad(wordsUnsplit.split(" "));
 
