@@ -409,11 +409,18 @@ export default function App() {
     barSpacer: {
       width: 20,
     },
-    webViewRowContainer: {
+    webViewRowContainerExpanded: {
       justifyContent: "space-between",
       flexDirection: "row",
       width: '100%',
       height: WEBVIEW_DIMENSION,
+      alignItems: 'center',
+    },
+    webViewRowContainerContracted: {
+      justifyContent: "space-between",
+      flexDirection: "row",
+      width: '100%',
+      height: 1,
       alignItems: 'center',
     },
     middleViewContainer: {
@@ -664,7 +671,7 @@ export default function App() {
   return (
     <SafeAreaView style={styles.container}>
       <Text style={styles.title}>WORD SALAD [beta]</Text>
-      <View style={styles.webViewRowContainer}>
+      <View style={activatedWebRefs ? styles.webViewRowContainerContracted : styles.webViewRowContainerExpanded}>
         <View style={styles.barSpacer} />
         {webRefs.map((webRef, i) => {
           return (
