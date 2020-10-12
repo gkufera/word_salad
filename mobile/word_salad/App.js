@@ -410,12 +410,17 @@ export default function App() {
       width: 20,
     },
     webViewRowContainer: {
-      flex: 1,
+      //flex: 1,
       justifyContent: "space-around",
       flexDirection: "row",
       width: '100%',
       height: WEBVIEW_DIMENSION * 2,
       alignItems: 'center',
+    },
+    middleViewContainer: {
+      flex: 1,
+      justifyContent: "space-between",
+      backgroundColor: "#FFFFFF",
     },
     webView: {
       height: WEBVIEW_DIMENSION,
@@ -573,7 +578,7 @@ export default function App() {
     if (activeSalads.filter((salad) => salad.length > 0) == NUM_WEB_REFS) {
       setCurrentWebRef(-1);
     } else {
-      nextFreeWebRef = (i + 1) % NUM_WEB_REFS;
+      var nextFreeWebRef = (i + 1) % NUM_WEB_REFS;
       while (activeSalads[nextFreeWebRef].length > 0) {
         nextFreeWebRef = (nextFreeWebRef + 1) % NUM_WEB_REFS;
       }
@@ -661,107 +666,111 @@ export default function App() {
   }
   */
 
-  return !activatedWebRefs ? (
+  return (
     <SafeAreaView style={styles.container}>
       <Text style={styles.title}>WORD SALAD [beta]</Text>
-        <View style={styles.webViewRowContainer}>
-          {webRefs.map((webRef, i) => {
-            return (
-              <WebView
-                ref={webRefs[i]}
-                key={i}
-                style={styles.webView}
-                hidden={currentWebRef != i}
-                source={{
-                  html: `<body />`,
-                }}
-                injectedJavaScript={initialInjectedJavaScript(i)}
-                onMessage={(event) => handleMessage(i, event)}
-                ignoreSilentHardwareSwitch={true}
-                scrollEnabled={false}
-                scalesPageToFit={Platform.OS === "android"}
-                bounces={false}
-              />
-            );
-          })}
-        </View>
-    </SafeAreaView>
-  ) : (
-    <SafeAreaView style={styles.container}>
-      <Text style={styles.title}>WORD SALAD [beta]</Text>
-      <Picker
-        style={styles.picker}
-        selectedValue={currentVoiceIndex}
-        onValueChange={(itemValue, itemIndex) =>
-          setCurrentVoiceIndex(itemValue)
-        }
-      >
-        {voiceOptions.map((voice, i) => {
+      <View style={styles.webViewRowContainer}>
+        {webRefs.map((webRef, i) => {
           return (
-            <Picker.Item
-              label={voice.label}
-              value={voice.index}
-              key={`picker item ${i}`}
+            <WebView
+              ref={webRefs[i]}
+              key={i}
+              style={styles.webView}
+              hidden={currentWebRef != i}
+              source={{
+                html: `<body />`,
+              }}
+              injectedJavaScript={initialInjectedJavaScript(i)}
+              onMessage={(event) => handleMessage(i, event)}
+              ignoreSilentHardwareSwitch={true}
+              scrollEnabled={false}
+              scalesPageToFit={Platform.OS === "android"}
+              bounces={false}
             />
           );
         })}
-      </Picker>
-      <View style={styles.barContainer}>
-        <View style={styles.barSpacer} />
-        <TextInput
-          style={styles.textInput}
-          onChangeText={(text) => setCurrentTextValue(text)}
-          value={currentTextValue}
-          autoCorrect={false}
-          autoFocus={true}
-          autoCapitalize={"none"}
-          placeholder={PLACEHOLDER}
-          returnKeyType={"none"}
-        />
-        <View style={styles.barSpacer} />
-        <TouchableOpacity style={styles.plus} onPress={() => startSalad()} />
-        <View style={styles.barSpacer} />
       </View>
-      {/*
-      <View style={styles.barContainer}>
-        <View style={styles.barSpacer} />
-        <Button
-          style={styles.button}
-          onPress={randomSaladPreset}
-          title="🥬🌶🥔"
-          color="#FFFFFF"
-        />
-        <View style={styles.barSpacer} />
-      */}
-      <Button
-        style={styles.button}
-        onPress={silence}
-        title="SILENCE"
-        color="#FF0000"
-      />
-      {/*
-        <View style={styles.barSpacer} />
-      </View>
-      */}
-      <ScrollView style={styles.salads}>
-        {activeSalads
-          .map((salad, index) => {
-            return { salad: salad, index: index };
-          })
-          .filter((saladAndIndex) => saladAndIndex.salad.length > 0)
-          .map((saladAndIndex) => {
-            return (
-              <Button
-                style={styles.button}
-                key={`button ${saladAndIndex.index}`}
-                onPress={() => stopSalad(saladAndIndex.index)}
-                title={saladAndIndex.salad}
-                color="#000000"
-              />
-            );
-          })}
-      </ScrollView>
+      {!activatedWebRefs ? <View style={styles.middleViewContainer} /> : (
+        <View style={styles.middleViewContainer}>
+          <Picker
+            style={styles.picker}
+            selectedValue={currentVoiceIndex}
+            onValueChange={(itemValue, itemIndex) =>
+              setCurrentVoiceIndex(itemValue)
+            }
+          >
+            {voiceOptions.map((voice, i) => {
+              return (
+                <Picker.Item
+                  label={voice.label}
+                  value={voice.index}
+                  key={`picker item ${i}`}
+                />
+              );
+            })}
+          </Picker>
+          <View style={styles.barContainer}>
+            <View style={styles.barSpacer} />
+            <TextInput
+              style={styles.textInput}
+              onChangeText={(text) => setCurrentTextValue(text)}
+              value={currentTextValue}
+              autoCorrect={false}
+              autoFocus={true}
+              autoCapitalize={"none"}
+              placeholder={PLACEHOLDER}
+              returnKeyType={"none"}
+            />
+            <View style={styles.barSpacer} />
+            <TouchableOpacity style={styles.plus} onPress={() => startSalad()} />
+            <View style={styles.barSpacer} />
+          </View>
+          {/*
+          <View style={styles.barContainer}>
+            <View style={styles.barSpacer} />
+            <Button
+              style={styles.button}
+              onPress={randomSaladPreset}
+              title="🥬🌶🥔"
+              color="#FFFFFF"
+            />
+            <View style={styles.barSpacer} />
+          */}
+          <Button
+            style={styles.button}
+            onPress={silence}
+            title="SILENCE"
+            color="#FF0000"
+          />
+          {/*
+            <View style={styles.barSpacer} />
+          </View>
+          */}
+          <ScrollView style={styles.salads}>
+            {activeSalads
+              .map((salad, index) => {
+                return { salad: salad, index: index };
+              })
+              .filter((saladAndIndex) => saladAndIndex.salad.length > 0)
+              .map((saladAndIndex) => {
+                return (
+                  <Button
+                    style={styles.button}
+                    key={`button ${saladAndIndex.index}`}
+                    onPress={() => stopSalad(saladAndIndex.index)}
+                    title={saladAndIndex.salad}
+                    color="#000000"
+                  />
+                );
+              })}
+          </ScrollView>
+        </View>
+      )}
       <StatusBar style="auto" />
-    </SafeAreaView>
+    </SafeAreaView>/*
+  ) : (
+    <SafeAreaView style={styles.container}>
+      
+    </SafeAreaView>*/
   );
 }
