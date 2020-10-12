@@ -279,21 +279,8 @@ const MESSAGE_TYPES = {
 const PLACEHOLDER = "type";
 const BAR_DIMENSION = 50;
 const WEBVIEW_DIMENSION = 50;
+const EMOJI = ['🥑', '🥦', '🥕', '🥒', '🌽', '🍆', '🧄', '🌶️', '🥬', '🍄', '🧅', '🥔']
 const PRESETS = [
-  [ 
-    {
-      lang: 'ar-SA',
-      salad: 'orp',
-      delay: 0,
-    },
-  ],
-  [ 
-    {
-      lang: 'ar-SA',
-      salad: 'banana',
-      delay: 0,
-    },
-  ],
   [ 
     {
       lang: 'fr-CA',
@@ -338,13 +325,6 @@ const PRESETS = [
       lang: 'ar-SA',
       salad: 'tee',
       delay: 1000,
-    },
-  ],
-  [ 
-    {
-      lang: 'ar-SA',
-      salad: 'tee',
-      delay: 0,
     },
   ],
   [ 
@@ -499,6 +479,27 @@ export default function App() {
     document.body.style.backgroundColor = 'black'
     true; // note: this is required, or you'll sometimes get silent failures
   `;
+
+  const getHtml = () => {
+    // generate random emoji
+    const randomEmoji = EMOJI[Math.floor(Math.random() * EMOJI.length)]
+    /*
+    const html =  `
+    <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+    <html>
+    <body>
+    <div style="width: ${WEBVIEW_DIMENSION}px; margin: 0 auto;">${randomEmoji}</div>
+    </body>
+    </html>
+    `*/
+    const html =  `
+    <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+    <html>
+    <body style="fontSize: 100;">${randomEmoji}</body>
+    </html>
+    `
+    return html
+  }
 
   const handleVoices = (voices) => {
     console.log(JSON.stringify(voices));
@@ -680,7 +681,7 @@ export default function App() {
               key={i}
               style={styles.webView}
               source={{
-                html: `<body />`,
+                html: getHtml(),
               }}
               injectedJavaScript={initialInjectedJavaScript(i)}
               onMessage={(event) => handleMessage(i, event)}
