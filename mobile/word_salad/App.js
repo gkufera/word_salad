@@ -318,12 +318,12 @@ const PRESETS = [
       delay: 3000,
     },
     {
-      lang: 'en-ES',
+      lang: 'es-ES',
       salad: 'banana',
       delay: 6000,
     },
     {
-      lang: 'en-ES',
+      lang: 'es-ES',
       salad: 'banana',
       delay: 10000,
     },
@@ -410,11 +410,10 @@ export default function App() {
       width: 20,
     },
     webViewRowContainer: {
-      //flex: 1,
-      justifyContent: "space-around",
+      justifyContent: "space-between",
       flexDirection: "row",
       width: '100%',
-      height: WEBVIEW_DIMENSION * 2,
+      height: WEBVIEW_DIMENSION,
       alignItems: 'center',
     },
     middleViewContainer: {
@@ -514,6 +513,7 @@ export default function App() {
             label: `${voice.lang} ${flag}`,
             index: voice.index,
             flag: flag,
+            lang: voice.lang,
           };
         })
     );
@@ -548,7 +548,7 @@ export default function App() {
     return string;
   };
 
-  const startSaladByWordsAndVoiceIndex = (wordsUnsplit, voiceIndex, i) => {
+  const startSaladByWordsAndVoiceIndexAndWebView = (wordsUnsplit, voiceIndex, i) => {
     if (wordsUnsplit.trim() === "" || activeSalads[i].length > 0) return;
 
     const salad = buildSalad(wordsUnsplit.split(" "));
@@ -564,7 +564,6 @@ export default function App() {
         speechSynthesis.speak(u);
       }
       startSalad${i}()
-      document.body.style.backgroundColor = 'white'
     `);
 
     activeSalads[i] = `${wordsUnsplit} ${
@@ -586,9 +585,11 @@ export default function App() {
     }
   }
 
-  const startSaladByWebView = (i) => startSaladByWordsAndVoiceIndex(currentTextValue, currentVoiceIndex, i)
+  const startSaladByWebView = (i) => startSaladByWordsAndVoiceIndexAndWebView(currentTextValue, currentVoiceIndex, i)
 
-  const startSalad = () => startSaladByWordsAndVoiceIndex(currentTextValue, currentVoiceIndex, currentWebRef)
+  const startSaladByWordsAndVoiceIndex = (wordsUnsplit, voiceIndex) => startSaladByWordsAndVoiceIndexAndWebView(wordsUnsplit, voiceIndex, currentWebRef)
+
+  const startSalad = () => startSaladByWordsAndVoiceIndexAndWebView(currentTextValue, currentVoiceIndex, currentWebRef)
 
   const endSalad = (i) => {
     activeSalads[i] = "";
@@ -603,7 +604,6 @@ export default function App() {
     console.log(`stopping ${i}`);
     webRefs[i].current.injectJavaScript(`
       speechSynthesis.cancel();
-      document.body.style.backgroundColor = 'black'
     `);
     endSalad(i);
   };
@@ -647,24 +647,33 @@ export default function App() {
     webRefs.map((webRef) => {
       webRef.current.injectJavaScript(`
         speechSynthesis.cancel();
-        document.body.style.backgroundColor = 'black'
       `);
     });
     setActiveSalads(Array(NUM_WEB_REFS).fill(""));
     setCurrentWebRef(0);
   };
 
-  /*
   const randomSaladPreset = () => {
     silence()
     const presetSelection = PRESETS[Math.floor(PRESETS.length * Math.random())]
-    for (element in presetSelection) {
-      if (delay == 0) {
-        startSaladByWordsAndVoiceIndex(element.salad, /* TODO GET INDEX FROM element.lang , /* TODO need list of ready synths)
+    for (const element of presetSelection) {
+      console.log(`enqueuing ${element.lang} '${element.salad}' ${element.delay}`)
+      const startSalad = () => {
+        const voice = voiceOptions.find((voice) => voice.lang == element.lang)
+        if (voice) {
+          console.log(`starting salad for '${element.salad}'`)
+          startSaladByWordsAndVoiceIndex(element.salad, voice.index)
+        } else {
+          console.log(`no voice for ${element.lang}`)
+        }
+      }
+      if (element.delay == 0) {
+        startSalad()
+      } else {
+        setTimeout(startSalad, element.delay)
       }
     }
   }
-  */
 
   return (
     <SafeAreaView style={styles.container}>
@@ -725,27 +734,18 @@ export default function App() {
             <TouchableOpacity style={styles.plus} onPress={() => startSalad()} />
             <View style={styles.barSpacer} />
           </View>
-          {/*
-          <View style={styles.barContainer}>
-            <View style={styles.barSpacer} />
-            <Button
-              style={styles.button}
-              onPress={randomSaladPreset}
-              title="🥬🌶🥔"
-              color="#FFFFFF"
-            />
-            <View style={styles.barSpacer} />
-          */}
+          <Button
+            style={styles.button}
+            onPress={() => randomSaladPreset()}
+            title="🥬🌶🥔"
+            color="#FFFFFF"
+          />
           <Button
             style={styles.button}
             onPress={silence}
             title="SILENCE"
             color="#FF0000"
           />
-          {/*
-            <View style={styles.barSpacer} />
-          </View>
-          */}
           <ScrollView style={styles.salads}>
             {activeSalads
               .map((salad, index) => {
