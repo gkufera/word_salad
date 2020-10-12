@@ -422,7 +422,6 @@ export default function App() {
       backgroundColor: "#FFFFFF",
     },
     webView: {
-      height: WEBVIEW_DIMENSION,
       width: WEBVIEW_DIMENSION,
     },
     picker: {
@@ -453,7 +452,6 @@ export default function App() {
   const [touchedWebViews, setTouchedWebViews] = React.useState(
     Array(NUM_WEB_REFS).fill(false)
   );
-
   const webRefs = [];
   for (var i = 0; i < NUM_WEB_REFS; i++) {
     webRefs[i] = useRef(null);
@@ -574,7 +572,7 @@ export default function App() {
     activeSalads[nextFreeWebRef] = `${wordsUnsplit} ${
       voiceOptions.find((voice) => voice.index == voiceIndex).flag
     }`;
-    setActiveSalads(activeSalads);
+    setActiveSalads([...activeSalads]);
 
     console.log(JSON.stringify(activeSalads));
   }
@@ -583,7 +581,7 @@ export default function App() {
 
   const endSalad = (i) => {
     activeSalads[i] = "";
-    setActiveSalads(activeSalads);
+    setActiveSalads([...activeSalads]);
     console.log("yoip");
     console.log(JSON.stringify(activeSalads));
     console.log("yoip");
@@ -656,9 +654,9 @@ export default function App() {
         }
       }
       if (element.delay == 0) {
-        setTimeout(startSalad, 200)
+        setTimeout(startSalad, 500)
       } else {
-        setTimeout(startSalad, element.delay + 200)
+        setTimeout(startSalad, element.delay + 500)
       }
     }
   }
@@ -667,6 +665,7 @@ export default function App() {
     <SafeAreaView style={styles.container}>
       <Text style={styles.title}>WORD SALAD [beta]</Text>
       <View style={styles.webViewRowContainer}>
+        <View style={styles.barSpacer} />
         {webRefs.map((webRef, i) => {
           return (
             <WebView
@@ -712,7 +711,7 @@ export default function App() {
               onChangeText={(text) => setCurrentTextValue(text)}
               value={currentTextValue}
               autoCorrect={false}
-              autoFocus={true}
+              autoFocus={false}
               autoCapitalize={"none"}
               placeholder={PLACEHOLDER}
               returnKeyType={"none"}
@@ -754,10 +753,6 @@ export default function App() {
         </View>
       )}
       <StatusBar style="auto" />
-    </SafeAreaView>/*
-  ) : (
-    <SafeAreaView style={styles.container}>
-      
-    </SafeAreaView>*/
+    </SafeAreaView>
   );
 }
