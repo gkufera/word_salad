@@ -272,7 +272,7 @@ export default function App() {
   // ...and Safari needs input in order to use text to speech.
   // So this is an annoyingly complicated project.
 
-  const NUM_WEB_REFS = 20;
+  const NUM_WEB_REFS = 40;
   const NUM_WORD_SALAD_WORDS = 500;
   const CHANCE_OF_SPACE = 50;
   const MESSAGE_TYPES = {
@@ -382,7 +382,25 @@ export default function App() {
     `
         : ``
     }
-    document.body.style.backgroundColor = 'black'
+    let hex = Math.floor(Math.random()*16777215).toString(16);
+    let lum = -.1
+
+    // validate hex string
+    hex = String(hex).replace(/[^0-9a-f]/gi, '');
+    if (hex.length < 6) {
+      hex = hex[0]+hex[0]+hex[1]+hex[1]+hex[2]+hex[2];
+    }
+    lum = lum || 0;
+  
+    // convert to decimal and change luminosity
+    var rgb = "#", c, i;
+    for (i = 0; i < 3; i++) {
+      c = parseInt(hex.substr(i*2,2), 16);
+      c = Math.round(Math.min(Math.max(0, c + (c * lum)), 255)).toString(16);
+      rgb += ("00"+c).substr(c.length);
+    }
+    
+    document.body.style.backgroundColor = rgb;
     true; // note: this is required, or you'll sometimes get silent failures
   `;
 
