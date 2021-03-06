@@ -272,7 +272,7 @@ export default function App() {
   // ...and Safari needs input in order to use text to speech.
   // So this is an annoyingly complicated project.
 
-  const NUM_WEB_REFS = 40;
+  const NUM_WEB_REFS = 15;
   const NUM_WORD_SALAD_WORDS = 500;
   const CHANCE_OF_SPACE = 50;
   const MESSAGE_TYPES = {
@@ -314,6 +314,10 @@ export default function App() {
       paddingBottom: 10,
       fontSize: 30,
       textAlign: "center",
+    },
+    website: {
+      textAlign: "center",
+      paddingBottom: 10,
     },
     topBarContainer: {
       flex: 1,
@@ -542,6 +546,7 @@ export default function App() {
   return (
     <SafeAreaView style={styles.container}>
       <Text style={styles.title}>WORD SALAD</Text>
+      <Text style={styles.website}>gregkufera.com</Text>
       <View style={styles.voicesContainer}>
         {voiceOptions.map((voice, i) => {
           return (
