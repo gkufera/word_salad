@@ -2,12 +2,11 @@
   "expo": {
     "name": "word_salad",
     "slug": "word_salad",
-    "version": "1.0.0",
+    "privacy": "public",
+    "version": "0.1.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "splash": {
-      "image": "./assets/splash.png",
-      "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
     "updates": {
@@ -17,7 +16,9 @@
       "**/*"
     ],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.gkufera.wordsalad",
+      "buildNumber": "0.1.0"
     },
     "web": {
       "favicon": "./assets/favicon.png"
