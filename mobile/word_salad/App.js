@@ -13,6 +13,7 @@ import Constants from "expo-constants";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Picker } from "@react-native-community/picker";
 import { Audio } from "expo-av";
+import { useKeepAwake } from 'expo-keep-awake';
 
 const getFlag = (countryCode) => {
   if (countryCode == "AD") return "🇦🇩";
@@ -271,6 +272,7 @@ export default function App() {
   // The only way we can make multiple simultaneous text to speeches on iOS is via multiple webviews.
   // ...and Safari needs input in order to use text to speech.
   // So this is an annoyingly complicated project.
+  useKeepAwake();
 
   const NUM_WEB_REFS = 15;
   const NUM_WORD_SALAD_WORDS = 500;
