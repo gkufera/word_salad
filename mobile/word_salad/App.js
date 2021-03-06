@@ -289,6 +289,21 @@ export default function App() {
       justifyContent: "space-between",
       backgroundColor: "#FFFFFF",
     },
+    voicesContainer: {
+      flex: 100000000000,
+      flexDirection: "row",
+      justifyContent: "flex-start",
+      flexWrap: "wrap",
+      alignContent: "flex-start",
+    },
+    voiceButtonActive: {
+      borderRadius: 100,
+      borderWidth: 12,
+      borderColor: '#fff'
+    },
+    voiceButtonInactive: {
+
+    },
     title: {
       paddingTop: 10,
       fontSize: 30,
@@ -418,7 +433,7 @@ export default function App() {
           const flag = getFlag(countryCode);
 
           return {
-            label: `${voice.lang} ${flag}`,
+            label: `${flag}`,
             index: voice.index,
             flag: flag,
           };
@@ -545,23 +560,19 @@ export default function App() {
   return (
     <SafeAreaView style={styles.container}>
       <Text style={styles.title}>WORD SALAD</Text>
-      <Picker
-        style={styles.picker}
-        selectedValue={currentVoiceIndex}
-        onValueChange={(itemValue, itemIndex) =>
-          setCurrentVoiceIndex(itemValue)
-        }
-      >
+      <View style={styles.voicesContainer}>
         {voiceOptions.map((voice, i) => {
           return (
-            <Picker.Item
-              label={voice.label}
-              value={voice.index}
-              key={`picker item ${i}`}
+            <Button
+              key={`voice ${voice.index}`}
+              style={voice.index == currentVoiceIndex ? styles.voiceButtonActive : styles.voiceButtonInactive}
+              title={voice.label}
+              onPress={() => setCurrentVoiceIndex(voice.index)}
+              color="#000000"
             />
           );
         })}
-      </Picker>
+      </View>
       <View style={styles.topBarContainer}>
         <View style={styles.barSpacer} />
         <TextInput
