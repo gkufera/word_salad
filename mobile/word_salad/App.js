@@ -293,7 +293,7 @@ const PRESETS = [
       delay: 200,
     },
   ],
-  [ 
+  [ /*
     {
       lang: 'ar-SA',
       salad: 'banana',
@@ -303,16 +303,16 @@ const PRESETS = [
       lang: 'en-IN',
       salad: 'banana',
       delay: 3000,
+    },*/
+    {
+      lang: 'es-ES',
+      salad: 'banana',
+      delay: 1000,
     },
     {
       lang: 'es-ES',
       salad: 'banana',
       delay: 6000,
-    },
-    {
-      lang: 'es-ES',
-      salad: 'banana',
-      delay: 10000,
     },
   ],
   [ 
@@ -436,6 +436,8 @@ export default function App() {
     Array(NUM_WEB_REFS).fill("")
   );
   const [activatedWebRefs, setActivatedWebRefs] = React.useState(false);
+  const [silencedSinceRandom, setSilencedSinceRandom] = React.useState(false);
+  const [randomButtonActive, setRandomButtonActive] = React.useState(true);
   const [touchedWebViews, setTouchedWebViews] = React.useState(
     Array(NUM_WEB_REFS).fill(false)
   );
@@ -502,7 +504,7 @@ export default function App() {
   }
 
   const handleVoices = (voices) => {
-    console.log(JSON.stringify(voices));
+    //console.log(JSON.stringify(voices));
     setVoiceOptions(
       voices
         .filter(
@@ -618,7 +620,7 @@ export default function App() {
   }
 
   const handleMessage = (i, event) => {
-    console.log(event.nativeEvent.data);
+    //console.log(event.nativeEvent.data);
     const data = JSON.parse(event.nativeEvent.data);
     switch (data.message) {
       case MESSAGE_TYPES.START_SALAD:
@@ -637,7 +639,7 @@ export default function App() {
     }
   };
 
-  const silence = () => {
+  const silence = (sinceRandom) => {
     console.log(`SILENCE`);
     webRefs.map((webRef) => {
       webRef.current.injectJavaScript(`
@@ -645,14 +647,22 @@ export default function App() {
       `);
     });
     setActiveSalads(Array(NUM_WEB_REFS).fill(""));
+    setSilencedSinceRandom(sinceRandom);
+    setRandomButtonActive(sinceRandom)
   };
 
   const randomSaladPreset = () => {
-    silence()
+    silence(false)
     const presetSelection = PRESETS[Math.floor(PRESETS.length * Math.random())]
+    var maxDelay = 500;
     for (const element of presetSelection) {
       console.log(`enqueuing ${element.lang} '${element.salad}' ${element.delay}`)
+      maxDelay = Math.max(maxDelay, element.delay)
       const startSalad = () => {
+        if (silencedSinceRandom) {
+          console.log(`silenced since random :'(`)
+          return
+        }
         const voice = voiceOptions.find((voice) => voice.lang == element.lang)
         if (voice) {
           console.log(`starting salad for '${element.salad}'`)
@@ -667,6 +677,9 @@ export default function App() {
         setTimeout(startSalad, element.delay + 500)
       }
     }
+    setTimeout(() => {
+      setRandomButtonActive(true)
+    }, maxDelay + 1000)
   }
 
   return (
@@ -730,13 +743,17 @@ export default function App() {
           </View>
           <Button
             style={styles.button}
-            onPress={() => randomSaladPreset()}
-            title="🥬🌶🥔"
+            onPress={() => {
+              if (randomButtonActive) {
+                randomSaladPreset()
+              }
+            }}
+            title={randomButtonActive ? "🥬🌶🥔" : "🙅🙅🙅"}
             color="#FFFFFF"
           />
           <Button
             style={styles.button}
-            onPress={silence}
+            onPress={() => silence(true)}
             title="SILENCE"
             color="#FF0000"
           />
