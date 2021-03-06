@@ -286,26 +286,32 @@ export default function App() {
   const styles = StyleSheet.create({
     container: {
       flex: 1,
-      justifyContent: "space-between",
+      justifyContent: "flex-start",
       backgroundColor: "#FFFFFF",
+      alignContent: "flex-start",
+      alignItems: "center",
+      fontSize: 12,
     },
     voicesContainer: {
-      flex: 100000000000,
+      flex: 1,
       flexDirection: "row",
-      justifyContent: "flex-start",
+      justifyContent: "center",
       flexWrap: "wrap",
       alignContent: "flex-start",
+      alignItems: "flex-start",
+      minHeight: 110,
     },
     voiceButtonActive: {
-      borderRadius: 100,
-      borderWidth: 12,
-      borderColor: '#fff'
+      borderWidth: 1,
+      borderColor: '#000000'
     },
     voiceButtonInactive: {
-
+      borderWidth: 1,
+      borderColor: '#FFFFFF'
     },
     title: {
       paddingTop: 10,
+      paddingBottom: 10,
       fontSize: 30,
       textAlign: "center",
     },
@@ -313,8 +319,8 @@ export default function App() {
       flex: 1,
       justifyContent: "space-between",
       flexDirection: "row",
+      alignItems: "center",
       height: PLUS_DIMENSION,
-      paddingBottom: 75,
     },
     textInput: {
       flex: 1,
@@ -340,19 +346,12 @@ export default function App() {
       bottom: 0,
     },
     invisiblePlusWebView: {}, // TODO these aren't invisible
-    picker: {
-      height: 200,
-      left: 0,
-      right: 0,
-    },
     salads: {
       flex: 1,
-      minHeight: 500,
-      paddingTop: 30,
+      minHeight: 350,
     },
     button: {
       height: 20,
-      fontSize: 12,
     },
   });
 
@@ -360,7 +359,7 @@ export default function App() {
   const [voiceOptions, setVoiceOptions] = React.useState([
     { label: "loading...", index: 0 },
   ]);
-  const [currentVoiceIndex, setCurrentVoiceIndex] = React.useState(0);
+  const [currentVoiceIndex, setCurrentVoiceIndex] = React.useState(-1);
   const [activeSalads, setActiveSalads] = React.useState(
     Array(NUM_WEB_REFS).fill("")
   );
@@ -397,25 +396,8 @@ export default function App() {
     `
         : ``
     }
-    let hex = Math.floor(Math.random()*16777215).toString(16);
-    let lum = -.1
 
-    // validate hex string
-    hex = String(hex).replace(/[^0-9a-f]/gi, '');
-    if (hex.length < 6) {
-      hex = hex[0]+hex[0]+hex[1]+hex[1]+hex[2]+hex[2];
-    }
-    lum = lum || 0;
-  
-    // convert to decimal and change luminosity
-    var rgb = "#", c, i;
-    for (i = 0; i < 3; i++) {
-      c = parseInt(hex.substr(i*2,2), 16);
-      c = Math.round(Math.min(Math.max(0, c + (c * lum)), 255)).toString(16);
-      rgb += ("00"+c).substr(c.length);
-    }
-    
-    document.body.style.backgroundColor = rgb;
+    document.body.style.backgroundColor = 'black';
     true; // note: this is required, or you'll sometimes get silent failures
   `;
 
@@ -563,13 +545,16 @@ export default function App() {
       <View style={styles.voicesContainer}>
         {voiceOptions.map((voice, i) => {
           return (
-            <Button
+            <View 
               key={`voice ${voice.index}`}
               style={voice.index == currentVoiceIndex ? styles.voiceButtonActive : styles.voiceButtonInactive}
-              title={voice.label}
-              onPress={() => setCurrentVoiceIndex(voice.index)}
-              color="#000000"
-            />
+            >
+              <Button
+                title={voice.label}
+                onPress={() => setCurrentVoiceIndex(voice.index)}
+                color="#000000"
+              />
+            </View>
           );
         })}
       </View>
@@ -612,13 +597,14 @@ export default function App() {
           })}
         </View>
         <View style={styles.barSpacer} />
+        <Button
+          style={styles.button}
+          onPress={silence}
+          title="SILENCE"
+          color="#FF0000"
+        />
+        <View style={styles.barSpacer} />
       </View>
-      <Button
-        style={styles.button}
-        onPress={silence}
-        title="SILENCE"
-        color="#FF0000"
-      />
       <ScrollView style={styles.salads}>
         {activeSalads
           .map((salad, index) => {
