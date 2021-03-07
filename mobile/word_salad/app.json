@@ -3,7 +3,7 @@
     "name": "word_salad",
     "slug": "word_salad",
     "privacy": "public",
-    "version": "0.1.0",
+    "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "splash": {
@@ -18,7 +18,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.gkufera.wordsalad",
-      "buildNumber": "0.1.0"
+      "buildNumber": "1.0.0"
     },
     "web": {
       "favicon": "./assets/favicon.png"
