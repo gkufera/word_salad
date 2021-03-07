@@ -301,7 +301,8 @@ export default function App() {
       flexWrap: "wrap",
       alignContent: "flex-start",
       alignItems: "flex-start",
-      minHeight: 110,
+      maxHeight: 210,
+      maxWidth: 500,
     },
     voiceButtonActive: {
       borderWidth: 1,
@@ -328,7 +329,9 @@ export default function App() {
       justifyContent: "space-between",
       flexDirection: "row",
       alignItems: "center",
-      height: PLUS_DIMENSION,
+      maxHeight: PLUS_DIMENSION,
+      paddingTop: 10,
+      maxWidth: 500 + PLUS_DIMENSION * 4,
     },
     textInput: {
       flex: 1,
@@ -365,7 +368,7 @@ export default function App() {
     },
     salads: {
       flex: 1,
-      minHeight: 350,
+      paddingTop: 20,
     },
     saladTextStyle: {
       fontFamily: 'Menlo',
