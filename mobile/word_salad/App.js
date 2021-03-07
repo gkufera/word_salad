@@ -7,6 +7,7 @@ import {
   View,
   Button,
   ScrollView,
+  TouchableOpacity,
 } from "react-native";
 import { WebView } from "react-native-webview";
 import Constants from "expo-constants";
@@ -292,7 +293,6 @@ export default function App() {
       backgroundColor: "#FFFFFF",
       alignContent: "flex-start",
       alignItems: "center",
-      fontSize: 12,
     },
     voicesContainer: {
       flex: 1,
@@ -316,10 +316,12 @@ export default function App() {
       paddingBottom: 10,
       fontSize: 30,
       textAlign: "center",
+      fontFamily: 'Menlo',
     },
     website: {
       textAlign: "center",
       paddingBottom: 10,
+      fontFamily: 'Menlo',
     },
     topBarContainer: {
       flex: 1,
@@ -336,6 +338,7 @@ export default function App() {
       borderWidth: 1,
       paddingLeft: 20,
       paddingRight: 20,
+      fontFamily: 'Menlo',
     },
     barSpacer: {
       width: 20,
@@ -352,12 +355,21 @@ export default function App() {
       bottom: 0,
     },
     invisiblePlusWebView: {}, // TODO these aren't invisible
+    buttonTouchable: {
+      
+    },
+    silenceTextStyle: {
+      fontFamily: 'Menlo',
+      fontSize: 12,
+      color: "#FF0000",
+    },
     salads: {
       flex: 1,
       minHeight: 350,
     },
-    button: {
-      height: 20,
+    saladTextStyle: {
+      fontFamily: 'Menlo',
+      fontSize: 15,
     },
   });
 
@@ -547,7 +559,7 @@ export default function App() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <Text style={styles.title}>WORD SALAD</Text>
+      <Text style={styles.title}>word_salad</Text>
       <Text style={styles.website}>gregkufera.com</Text>
       <View style={styles.voicesContainer}>
         {voiceOptions.map((voice, i) => {
@@ -604,12 +616,9 @@ export default function App() {
           })}
         </View>
         <View style={styles.barSpacer} />
-        <Button
-          style={styles.button}
-          onPress={silence}
-          title="SILENCE"
-          color="#FF0000"
-        />
+        <TouchableOpacity style={styles.buttonTouchable} onPress={silence}>
+          <Text style={styles.silenceTextStyle}>SILENCE</Text>
+        </TouchableOpacity>
         <View style={styles.barSpacer} />
       </View>
       <ScrollView style={styles.salads}>
@@ -620,13 +629,13 @@ export default function App() {
           .filter((saladAndIndex) => saladAndIndex.salad.length > 0)
           .map((saladAndIndex) => {
             return (
-              <Button
-                style={styles.button}
+              <TouchableOpacity 
                 key={`button ${saladAndIndex.index}`}
+                style={styles.buttonTouchable} 
                 onPress={() => stopSalad(saladAndIndex.index)}
-                title={saladAndIndex.salad}
-                color="#000000"
-              />
+              >
+                <Text style={styles.saladTextStyle}>{saladAndIndex.salad}</Text>
+              </TouchableOpacity>
             );
           })}
       </ScrollView>
