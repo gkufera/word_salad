@@ -358,13 +358,19 @@ export default function App() {
       bottom: 0,
     },
     invisiblePlusWebView: {}, // TODO these aren't invisible
-    buttonTouchable: {
-      
+    silenceTouchable: {
+      flex: 1,
+      justifyContent: "center",
+      alignItems: "center",
+      height: PLUS_DIMENSION,
     },
     silenceTextStyle: {
       fontFamily: 'Menlo',
       fontSize: 12,
       color: "#FF0000",
+    },
+    saladTouchable: {
+      
     },
     salads: {
       flex: 1,
@@ -619,7 +625,7 @@ export default function App() {
           })}
         </View>
         <View style={styles.barSpacer} />
-        <TouchableOpacity style={styles.buttonTouchable} onPress={silence}>
+        <TouchableOpacity style={styles.silenceTouchable} onPress={silence}>
           <Text style={styles.silenceTextStyle}>SILENCE</Text>
         </TouchableOpacity>
         <View style={styles.barSpacer} />
@@ -634,7 +640,7 @@ export default function App() {
             return (
               <TouchableOpacity 
                 key={`button ${saladAndIndex.index}`}
-                style={styles.buttonTouchable} 
+                style={styles.saladTouchable} 
                 onPress={() => stopSalad(saladAndIndex.index)}
               >
                 <Text style={styles.saladTextStyle}>{saladAndIndex.salad}</Text>
